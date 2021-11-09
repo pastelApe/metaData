@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/mongoose-subbuild/CMakeFiles/mongoose-populate"
+		},
+		{
+			"file" : "/Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/mongoose-subbuild/CMakeFiles/mongoose-populate.rule"
+		},
+		{
+			"file" : "/Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/mongoose-subbuild/CMakeFiles/mongoose-populate-complete.rule"
+		},
+		{
+			"file" : "/Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/mongoose-subbuild/mongoose-populate-prefix/src/mongoose-populate-stamp/mongoose-populate-build.rule"
+		},
+		{
+			"file" : "/Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/mongoose-subbuild/mongoose-populate-prefix/src/mongoose-populate-stamp/mongoose-populate-configure.rule"
+		},
+		{
+			"file" : "/Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/mongoose-subbuild/mongoose-populate-prefix/src/mongoose-populate-stamp/mongoose-populate-download.rule"
+		},
+		{
+			"file" : "/Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/mongoose-subbuild/mongoose-populate-prefix/src/mongoose-populate-stamp/mongoose-populate-install.rule"
+		},
+		{
+			"file" : "/Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/mongoose-subbuild/mongoose-populate-prefix/src/mongoose-populate-stamp/mongoose-populate-mkdir.rule"
+		},
+		{
+			"file" : "/Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/mongoose-subbuild/mongoose-populate-prefix/src/mongoose-populate-stamp/mongoose-populate-patch.rule"
+		},
+		{
+			"file" : "/Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/mongoose-subbuild/mongoose-populate-prefix/src/mongoose-populate-stamp/mongoose-populate-test.rule"
+		},
+		{
+			"file" : "/Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/mongoose-subbuild/mongoose-populate-prefix/src/mongoose-populate-stamp/mongoose-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"mongoose-populate"
+		],
+		"name" : "mongoose-populate"
+	}
+}

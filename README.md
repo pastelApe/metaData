@@ -1,2 +1,2 @@
-# metaData
-Extract and parse file meta data keys. 
+# metadata
+Extract and format metadata

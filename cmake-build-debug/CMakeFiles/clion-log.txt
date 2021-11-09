@@ -1,0 +1,163 @@
+/Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_DEPENDS_USE_COMPILER=FALSE -G "CodeBlocks - Unix Makefiles" /Users/xawatso/Desktop/Projects/metaData
+-- Populating cpr
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/cpr-subbuild
+[ 11%] Performing update step for 'cpr-populate'
+[ 22%] No patch step for 'cpr-populate'
+[ 33%] No configure step for 'cpr-populate'
+[ 44%] No build step for 'cpr-populate'
+[ 55%] No install step for 'cpr-populate'
+[ 66%] No test step for 'cpr-populate'
+[ 77%] Completed 'cpr-populate'
+[100%] Built target cpr-populate
+-- C++ Requests CMake Options
+-- =======================================================
+--   CPR_GENERATE_COVERAGE: OFF
+--   CPR_CURL_NOSIGNAL: OFF
+--   CPR_USE_SYSTEM_GTEST: OFF
+--   CPR_FORCE_USE_SYSTEM_CURL: OFF
+--   CPR_ENABLE_SSL: ON
+--   CPR_FORCE_OPENSSL_BACKEND: OFF
+--   CPR_FORCE_WINSSL_BACKEND: OFF
+--   CPR_FORCE_DARWINSSL_BACKEND: OFF
+--   CPR_BUILD_TESTS: ON
+--   CPR_BUILD_TESTS_SSL: ON
+-- =======================================================
+-- Automatically detecting SSL backend.
+-- Detecting SSL backend...
+-- SSL auto detect: Using DarwinSSL.
+-- Configuring build in curl...
+-- Populating zlib
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/zlib-subbuild
+[ 11%] Performing update step for 'zlib-populate'
+[ 22%] No patch step for 'zlib-populate'
+[ 33%] No configure step for 'zlib-populate'
+[ 44%] No build step for 'zlib-populate'
+[ 55%] No install step for 'zlib-populate'
+[ 66%] No test step for 'zlib-populate'
+[ 77%] Completed 'zlib-populate'
+[100%] Built target zlib-populate
+-- Using CMake version 3.20.2
+-- ZLIB_HEADER_VERSION: 1.2.11
+-- ZLIBNG_HEADER_VERSION: 2.0.0-RC2
+-- Arch detected: 'x86_64'
+-- Basearch of 'x86_64' has been detected as: 'x86'
+-- Architecture supports unaligned reads
+-- Architecture supports unaligned reads of > 4 bytes
+-- Architecture-specific source files: arch/x86/x86.c;arch/x86/slide_avx.c;arch/x86/chunkset_avx.c;arch/x86/compare258_avx.c;arch/x86/adler32_avx.c;arch/x86/insert_string_sse.c;arch/x86/compare258_sse.c;arch/x86/chunkset_sse.c;arch/x86/slide_sse.c;arch/x86/adler32_ssse3.c;arch/x86/crc_folding.c
+-- The following features have been enabled:
+
+ * CMAKE_BUILD_TYPE, Build type: Debug (selected)
+ * WITH_GZFILEOP, Compile with support for gzFile related functions
+ * ZLIB_COMPAT, Compile with zlib compatible API
+ * WITH_OPTIM, Build with optimisation
+ * WITH_NEW_STRATEGIES, Use new strategies
+ * WITH_UNALIGNED, Support unaligned reads on platforms that support it
+ * WITH_AVX2, Build with AVX2
+ * WITH_SSE2, Build with SSE2
+ * WITH_SSSE3, Build with SSSE3
+ * WITH_SSE4, Build with SSE4
+ * WITH_PCLMULQDQ, Build with PCLMULQDQ
+ * AVX2_SLIDEHASH, Support AVX2 optimized slide_hash, using "-mavx2"
+ * AVX_CHUNKSET, Support AVX optimized chunkset, using "-mavx2"
+ * AVX2_COMPARE258, Support AVX2 optimized compare258, using "-mavx2"
+ * AVX2_ADLER32, Support AVX2-accelerated adler32, using "-mavx2"
+ * SSE42_CRC, Support SSE4.2 optimized CRC hash generation, using "-msse4"
+ * SSE42_COMPARE258, Support SSE4.2 optimized compare258, using "-msse4"
+ * SSSE3_ADLER32, Support SSSE3-accelerated adler32, using "-mssse3"
+ * PCLMUL_CRC, Support CRC hash generation using PCLMULQDQ, using "-mssse3 -msse4 -mpclmul"
+
+-- The following OPTIONAL packages have been found:
+
+ * Git
+
+-- The following features have been disabled:
+
+ * ZLIB_ENABLE_TESTS, Build test binaries
+ * ZLIB_DUAL_LINK, Dual link tests against system zlib
+ * WITH_SANITIZER, Build with sanitizer (Memory, Address, Undefined)
+ * WITH_FUZZERS, Build test/fuzz
+ * WITH_NATIVE_INSTRUCTIONS, Instruct the compiler to use the full instruction set on this host (gcc/clang -march=native)
+ * WITH_MAINTAINER_WARNINGS, Build with project maintainer warnings
+ * WITH_CODE_COVERAGE, Enable code coverage reporting
+ * WITH_INFLATE_STRICT, Build with strict inflate distance checking
+ * WITH_INFLATE_ALLOW_INVALID_DIST, Build with zero fill for inflate invalid distances
+ * INSTALL_UTILS, Copy minigzip and minideflate during install
+
+-- Enabled curl SSL
+-- Populating curl
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/curl-subbuild
+[100%] Built target curl-populate
+-- curl version=[7.75.0]
+-- Could NOT find LibSSH2 (missing: LIBSSH2_LIBRARY LIBSSH2_INCLUDE_DIR) 
+-- CA path only supported by OpenSSL, GnuTLS or mbed TLS. Set CURL_CA_PATH=none or enable one of those TLS backends.
+-- Enabled features: SSL IPv6 unixsockets libz AsynchDNS alt-svc
+-- Enabled protocols: HTTP HTTPS
+-- Enabled SSL backends: Secure Transport
+-- Not using system gtest, using built-in googletest project instead.
+-- Populating googletest
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/googletest-subbuild
+[100%] Built target googletest-populate
+CMake Deprecation Warning at cmake-build-debug/_deps/googletest-src/CMakeLists.txt:4 (cmake_minimum_required):
+  Compatibility with CMake < 2.8.12 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+
+
+CMake Deprecation Warning at cmake-build-debug/_deps/googletest-src/googlemock/CMakeLists.txt:45 (cmake_minimum_required):
+  Compatibility with CMake < 2.8.12 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+
+
+CMake Deprecation Warning at cmake-build-debug/_deps/googletest-src/googletest/CMakeLists.txt:56 (cmake_minimum_required):
+  Compatibility with CMake < 2.8.12 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+
+
+-- Building mongoose project for test support.
+-- Populating mongoose
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/mongoose-subbuild
+[ 11%] Creating directories for 'mongoose-populate'
+[ 22%] Performing download step (download, verify and extract) for 'mongoose-populate'
+-- verifying file...
+       file='/Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/mongoose-subbuild/mongoose-populate-prefix/src/6.18.tar.gz'
+-- File already exists and hash match (skip download):
+  file='/Users/xawatso/Desktop/Projects/metaData/cmake-build-debug/_deps/mongoose-subbuild/mongoose-populate-prefix/src/6.18.tar.gz'
+  SHA256='f5c10346abc9c72f7cac7885d853ca064fb09aad57580433941a8fd7a3543769'
+-- extracting...
+     src='/Users/xawatso/Desktop/Projects/metadata/cmake-build-debug/_deps/mongoose-subbuild/mongoose-populate-prefix/src/6.18.tar.gz'
+     dst='/Users/xawatso/Desktop/Projects/metadata/cmake-build-debug/_deps/mongoose-src'
+-- extracting... [tar xfz]
+-- extracting... [analysis]
+-- extracting... [rename]
+-- extracting... [clean up]
+-- extracting... done
+[ 33%] No update step for 'mongoose-populate'
+[ 44%] No patch step for 'mongoose-populate'
+[ 55%] No configure step for 'mongoose-populate'
+[ 66%] No build step for 'mongoose-populate'
+[ 77%] No install step for 'mongoose-populate'
+[ 88%] No test step for 'mongoose-populate'
+[100%] Completed 'mongoose-populate'
+[100%] Built target mongoose-populate
+-- Installing: /Users/xawatso/Desktop/Projects/metadata/cmake-build-debug/_deps/mongoose-src/mongoose.CMakeLists.txt
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /Users/xawatso/Desktop/Projects/metaData/cmake-build-debug
