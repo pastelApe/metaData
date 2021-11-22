@@ -1,6 +1,9 @@
 #include <iostream>
-#include <vector>
 #include <filesystem>
+#include <vector>
+#include <set>
+#include <cstring>
+
 
 #include <rapidjson/document.h>
 #include <cpr/cpr.h>
@@ -8,7 +11,7 @@
 namespace  fs = std::filesystem;
 namespace  rj = rapidjson;
 
-std::vector<std::string> meta_keys;
+std::set<std::string> dublin_Core_Keys;
 
 struct type_handler : public rj::BaseReaderHandler<rj::UTF8<>, type_handler>
 {
@@ -24,8 +27,16 @@ struct type_handler : public rj::BaseReaderHandler<rj::UTF8<>, type_handler>
     bool StartObject() {return true;}
     bool Key(const char* key, rj::SizeType length, bool copy)
     {
-        meta_keys.emplace_back(key);
-//        std::cout << key << "\n";
+        const char *sub_String {"Unknown"};
+        if (strstr(key, sub_String) != nullptr)
+        {
+            std::cout << "Unknown skipped.\n";
+        }
+        else
+        {
+            dublin_Core_Keys.emplace(key);
+        }
+
         return true;
     }
     bool EndObject(rj::SizeType memberCount) {return true;}
@@ -36,35 +47,35 @@ struct type_handler : public rj::BaseReaderHandler<rj::UTF8<>, type_handler>
 
 cpr::Response put_request(std::vector<char>& buff, fs::path& path)
 {
-    fs::path fileName = path.filename();
+    fs::path file_Name = path.filename();
     auto url {cpr::Url{"http://localhost:9998/rmeta/form/text"}};
-    auto buff_size {cpr::Buffer{buff.begin(), buff.end(), fileName}};
+    auto buff_Size {cpr::Buffer{buff.begin(), buff.end(), file_Name}};
     // Set maxEmbeddedResources to 0 to Return metadata for the parent file/container (e.g. zip) only.
     auto header {cpr::Header {{"maxEmbeddedResources", "0",},
-                                      {"X-Tika-OCRskipOcr", "true"},
-                                      {"accept", "application/json"}}};
+                              {"X-Tika-OCRskipOcr", "true"},
+                              {"accept", "application/json"}}};
 
-    cpr::Response response {cpr::Post(url, header, cpr::Multipart{{fileName, buff_size}})};
+    cpr::Response response {cpr::Post(url, header, cpr::Multipart{{file_Name, buff_Size}})};
 
-   if (response.status_code != 200)
-   {
+    if (response.status_code != 200)
+    {
         std::cout << "Failed to processes request. Error code: " << response.status_code << " . Check Tika Server.\n"
-        << "Path: " << path.relative_path() << "\n";
-   }
+                  << "Path: " << path.relative_path() << "\n";
+    }
     return response;
 }
 
-void parse_json(cpr::Response& response)
+void json_parser(cpr::Response& response)
 {
     std::string text {response.text};
-    rj::StringStream str_stream(text.c_str());
+    rj::StringStream str_Stream(text.c_str());
     rj::Reader reader;
     type_handler handler;
 
-    reader.Parse(str_stream, handler);
+    reader.Parse(str_Stream, handler);
 }
 
-std::vector<char> file_buffer (fs::path& path)
+std::vector<char> file_Buffer(fs::path& path)
 {
     //Open the file.
     std::ifstream stream {path.string()};
@@ -78,35 +89,27 @@ std::vector<char> file_buffer (fs::path& path)
     return buff;
 }
 
-void constructor(fs::path& path)
+void parse_Json(fs::path& path)
 {
-    std::vector<char> buff {file_buffer(path)};
+    std::vector<char> buff {file_Buffer(path)};
     cpr::Response response {put_request(buff, path)};
 
-    parse_json(response);
+    json_parser(response);
 }
-
-void unique_vector(std::vector<std::string>& vector)
+void writer(std::set<std::string>& set)
 {
-    std::sort(vector.begin(), vector.end());
-    vector.erase(std::unique(vector.begin(), vector.end()), vector.end());
-}
-
-void writer(std::vector<std::string>& vector)
-{
-    std::sort(vector.begin(), vector.end());
-
-    std::string path {"/Users/xawatso/Desktop/unique_keys_test.json"};
+    std::string path {"/home/xavier/Desktop/unique_keys_test.json"};
     std::ofstream file(path);
 
-    for (const auto& i : vector)
+    for (auto& i : set)
     {
         file << i << "\n";
     }
 }
 
 
-int main(int argc,char* argv[]) {
+int main(int argc,char* argv[])
+{
 
     if (argc != 2)
     {
@@ -134,7 +137,7 @@ int main(int argc,char* argv[]) {
         if (!is_directory(path))
         {
             fs::path& file {path};
-            constructor(file);
+            parse_Json(file);
         }
         else
         {
@@ -144,15 +147,11 @@ int main(int argc,char* argv[]) {
                 {
                     continue;
                 }
-                constructor((fs::path& )dir_entry.path());
+                parse_Json((fs::path& )dir_entry.path());
             }
         }
     }
 
-    unique_vector(meta_keys);
-    std::cout << "Items are now unique." << "\n";
-
-    writer(meta_keys);
-    std::cout << "File has been written." << "\n";
+    writer(dublin_Core_Keys);
     return 0;
 }
