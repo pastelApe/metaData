@@ -9,8 +9,8 @@
       <config projectName="metaData" targetName="libcurl" />
       <config projectName="metaData" targetName="zlib" />
       <config projectName="metaData" targetName="cpr" />
-      <config projectName="metaData" targetName="gmock_main" />
       <config projectName="metaData" targetName="uninstall" />
+      <config projectName="metaData" targetName="gmock_main" />
       <config projectName="metaData" targetName="mongoose" />
       <config projectName="metaData" targetName="gtest" />
       <config projectName="metaData" targetName="metaData" />
@@ -25,6 +25,7 @@
   <component name="ChangeListManager">
     <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -60,11 +61,6 @@
     <property name="settings.editor.selected.configurable" value="CPPToolchains" />
   </component>
   <component name="RunManager" selected="CMake Application.metaData">
-    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
-      </method>
-    </configuration>
     <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -151,6 +147,16 @@
       <workItem from="1636480781158" duration="2642000" />
       <workItem from="1636485358713" duration="4652000" />
       <workItem from="1636492415300" duration="454000" />
+      <workItem from="1637681242111" duration="617000" />
+      <workItem from="1637683199083" duration="597000" />
+      <workItem from="1637683833772" duration="158000" />
+      <workItem from="1637684000384" duration="14954000" />
+      <workItem from="1637778570876" duration="460000" />
+      <workItem from="1637779038719" duration="1556000" />
+      <workItem from="1637780652201" duration="125000" />
+      <workItem from="1637781606496" duration="859000" />
+      <workItem from="1637782474031" duration="6827000" />
+      <workItem from="1638198261882" duration="4891000" />
     </task>
     <servers />
   </component>

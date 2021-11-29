@@ -2,8 +2,6 @@
 #include <filesystem>
 #include <vector>
 #include <set>
-#include <cstring>
-
 
 #include <rapidjson/document.h>
 #include <cpr/cpr.h>
@@ -11,42 +9,24 @@
 namespace  fs = std::filesystem;
 namespace  rj = rapidjson;
 
-std::set<std::string> dublin_Core_Keys;
+std::set<std::string> meta_Keys;
 
-struct type_handler : public rj::BaseReaderHandler<rj::UTF8<>, type_handler>
-{
+std::vector<char> file_Buffer(fs::path& path) {
+    //Open the file.
+    std::ifstream stream {path.string()};
 
-    bool Null  () {std::cout << "Null()" << "\n"; return true;}
-    bool Bool  (bool b) {std::cout << "Bool(" << std::boolalpha << b << ")" << "\n"; return true;}
-    bool Int   (int i) {std::cout << "Int(" << i << ")" << "\n"; return true;}
-    bool Uint  (unsigned u) {std::cout << "Uint(" << u << ")" << "\n"; return true;}
-    bool Int64 (int64_t i) {std::cout << "Int64(" << i << ")" << "\n"; return true;}
-    bool Uint64(uint64_t u) {std::cout << "Uint64(" << u << ")" << "\n"; return true;}
-    bool Double(double d) {std::cout << "Double(" << d << ")" << "\n"; return true;}
-    bool String(const char* str, rj::SizeType length, bool copy) {return true;}
-    bool StartObject() {return true;}
-    bool Key(const char* key, rj::SizeType length, bool copy)
-    {
-        const char *sub_String {"Unknown"};
-        if (strstr(key, sub_String) != nullptr)
-        {
-            std::cout << "Unknown skipped.\n";
-        }
-        else
-        {
-            dublin_Core_Keys.emplace(key);
-        }
-
-        return true;
+    if (!stream.is_open()) {
+        std::cerr << "Could not open file for reading!" << "\n";
+        std::exit(1);
     }
-    bool EndObject(rj::SizeType memberCount) {return true;}
-    bool StartArray() {return true;}
-    bool EndArray(rj::SizeType element_count) {return true;}
 
-};
+    std::vector<char> buff {
+        std::istreambuf_iterator<char>(stream),
+                std::istreambuf_iterator<char>()};
+    return buff;
+}
 
-cpr::Response put_request(std::vector<char>& buff, fs::path& path)
-{
+cpr::Response put_Request(std::vector<char>& buff, fs::path& path) {
     fs::path file_Name = path.filename();
     auto url {cpr::Url{"http://localhost:9998/rmeta/form/text"}};
     auto buff_Size {cpr::Buffer{buff.begin(), buff.end(), file_Name}};
@@ -57,74 +37,71 @@ cpr::Response put_request(std::vector<char>& buff, fs::path& path)
 
     cpr::Response response {cpr::Post(url, header, cpr::Multipart{{file_Name, buff_Size}})};
 
-    if (response.status_code != 200)
-    {
+    if (response.status_code != 200) {
         std::cout << "Failed to processes request. Error code: " << response.status_code << " . Check Tika Server.\n"
                   << "Path: " << path.relative_path() << "\n";
     }
     return response;
 }
 
-void json_parser(cpr::Response& response)
-{
-    std::string text {response.text};
-    rj::StringStream str_Stream(text.c_str());
-    rj::Reader reader;
-    type_handler handler;
+void json_Parser(cpr::Response& response) {
+    rj::Document document;
+    std::string json {response.text};
+    const char* str_Stream(json.c_str());
+    document.Parse(str_Stream);
 
-    reader.Parse(str_Stream, handler);
+    if (document.IsArray()) {
+        for (auto& member : document[0].GetObject()) {
+            std::string key = member.name.GetString();
+            meta_Keys.emplace(key);
+        }
+    }
+    else if (document.IsObject()) {
+        for (auto& member : document.GetObject()) {
+            std::string key = member.name.GetString();
+            meta_Keys.emplace(key);
+        }
+    }
 }
 
-std::vector<char> file_Buffer(fs::path& path)
-{
-    //Open the file.
-    std::ifstream stream {path.string()};
-
-    if (!stream.is_open())
-        std::cerr << "Could not open file for reading!" << "\n";
-
-    std::vector<char> buff {
-            std::istreambuf_iterator<char>(stream),
-            std::istreambuf_iterator<char>()};
-    return buff;
-}
-
-void parse_Json(fs::path& path)
-{
+void parse_Helper(fs::path& path) {
     std::vector<char> buff {file_Buffer(path)};
-    cpr::Response response {put_request(buff, path)};
+    cpr::Response response {put_Request(buff, path)};
 
-    json_parser(response);
+    json_Parser(response);
 }
-void writer(std::set<std::string>& set)
-{
+
+void parse_Dir_Entry(const fs::directory_entry& dir_Entry) {
+    if (!dir_Entry.is_regular_file()) {
+        ;
+    }
+    else {
+        parse_Helper((fs::path &) dir_Entry.path());
+    }
+}
+
+void writer(std::set<std::string>& set) {
     std::string path {"/home/xavier/Desktop/unique_keys_test.json"};
     std::ofstream file(path);
 
-    for (auto& i : set)
-    {
+    for (auto& i : set) {
         file << i << "\n";
     }
 }
 
 
-int main(int argc,char* argv[])
-{
-
-    if (argc != 2)
-    {
+int main(int argc,char* argv[]) {
+    //If a path is not passed via CLI.
+    if (argc != 2) {
         std::cout << "Please enter a valid path." << "\n";
         return 1;
     }
-    else
-    {
+    else {
         fs::path path {argv[1]};
-        try
-        {
+        try {
             fs::exists(path);
         }
-        catch (fs::filesystem_error const& fs_error)
-        {
+        catch (fs::filesystem_error const& fs_error) {
             std::cout
                     << "what(): "           << fs_error.what()                      << "\n"
                     << "path1():"           << fs_error.path1()                     << "\n"
@@ -134,24 +111,16 @@ int main(int argc,char* argv[])
                     << "code().category():" << fs_error.code().category().name()    << "\n";
         }
 
-        if (!is_directory(path))
-        {
-            fs::path& file {path};
-            parse_Json(file);
+        if (!is_directory(path)) {
+            parse_Helper(path);
         }
-        else
-        {
-            for (const auto& dir_entry: fs::recursive_directory_iterator(path))
-            {
-                if (!dir_entry.is_regular_file() || dir_entry.is_symlink())
-                {
-                    continue;
-                }
-                parse_Json((fs::path& )dir_entry.path());
+        else {
+            for (auto &dir_Entry: fs::recursive_directory_iterator(path)) {
+                parse_Dir_Entry(dir_Entry);
             }
         }
     }
-
-    writer(dublin_Core_Keys);
+    writer(meta_Keys);
     return 0;
 }
+
