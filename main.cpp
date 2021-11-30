@@ -1,5 +1,6 @@
-#include <iostream>
 #include <filesystem>
+#include <iostream>
+#include <fstream>
 #include <vector>
 #include <set>
 
@@ -26,6 +27,7 @@ std::vector<char> file_Buffer(fs::path& path) {
     return buff;
 }
 
+
 cpr::Response put_Request(std::vector<char>& buff, fs::path& path) {
     fs::path file_Name = path.filename();
     auto url {cpr::Url{"http://localhost:9998/rmeta/form/text"}};
@@ -44,11 +46,12 @@ cpr::Response put_Request(std::vector<char>& buff, fs::path& path) {
     return response;
 }
 
+
 void json_Parser(cpr::Response& response) {
     rj::Document document;
     std::string json {response.text};
-    const char* str_Stream(json.c_str());
-    document.Parse(str_Stream);
+    const char* str_JSON(json.c_str());
+    document.Parse(str_JSON);
 
     if (document.IsArray()) {
         for (auto& member : document[0].GetObject()) {
@@ -58,11 +61,12 @@ void json_Parser(cpr::Response& response) {
     }
     else if (document.IsObject()) {
         for (auto& member : document.GetObject()) {
-            std::string key = member.name.GetString();
+            std::string key = member.name.GetString();;
             meta_Keys.emplace(key);
         }
     }
 }
+
 
 void parse_Helper(fs::path& path) {
     std::vector<char> buff {file_Buffer(path)};
@@ -70,6 +74,7 @@ void parse_Helper(fs::path& path) {
 
     json_Parser(response);
 }
+
 
 void parse_Dir_Entry(const fs::directory_entry& dir_Entry) {
     if (!dir_Entry.is_regular_file()) {
@@ -80,13 +85,40 @@ void parse_Dir_Entry(const fs::directory_entry& dir_Entry) {
     }
 }
 
-void writer(std::set<std::string>& set) {
-    std::string path {"/home/xavier/Desktop/unique_keys_test.json"};
+
+void output_File(std::set<std::string>& set) {
+    std::string path {"/home/xavier/Desktop/unique_keys.json"};
     std::ofstream file(path);
 
     for (auto& i : set) {
         file << i << "\n";
     }
+}
+
+
+void edit_File() {
+    std::ifstream key_File ("/home/xavier/Desktop/unique_keys.txt");
+    std::ofstream new_File("/home/xavier/Desktop/unique_keys_edit.txt");
+    std::string line;
+
+    if (!key_File.is_open()){
+        std::cout << "Failed to open file.\n";
+        return 1;
+    }
+
+    while (getline(key_File, line)){
+        std::string ignore = "Unknown";
+        std::size_t found = line.find(ignore);
+        if (found != std::string::npos) {
+            continue;
+        }
+        else {
+            new_File << line << '\n';
+        }
+    }
+
+    key_File.close();
+    new_File.close();
 }
 
 
@@ -120,7 +152,11 @@ int main(int argc,char* argv[]) {
             }
         }
     }
-    writer(meta_Keys);
+
+    output_File(meta_Keys);
+
+    edit_File();
+
     return 0;
 }
 

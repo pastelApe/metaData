@@ -25,7 +25,6 @@
   <component name="ChangeListManager">
     <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -61,11 +60,6 @@
     <property name="settings.editor.selected.configurable" value="CPPToolchains" />
   </component>
   <component name="RunManager" selected="CMake Application.metaData">
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="cpr" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metaData" TARGET_NAME="cpr" CONFIG_NAME="Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -156,7 +150,10 @@
       <workItem from="1637780652201" duration="125000" />
       <workItem from="1637781606496" duration="859000" />
       <workItem from="1637782474031" duration="6827000" />
-      <workItem from="1638198261882" duration="4891000" />
+      <workItem from="1638198261882" duration="5481000" />
+      <workItem from="1638222682683" duration="1534000" />
+      <workItem from="1638229701561" duration="93000" />
+      <workItem from="1638230444958" duration="229000" />
     </task>
     <servers />
   </component>
