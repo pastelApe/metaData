@@ -1,6 +1,5 @@
 #include <filesystem>
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <set>
 
@@ -12,56 +11,167 @@ namespace  rj = rapidjson;
 
 std::set<std::string> meta_Keys;
 
-std::vector<char> file_Buffer(fs::path& path) {
+std::vector<char> file_Buffer (fs::path& path)
+{
     //Open the file.
     std::ifstream stream {path.string()};
 
-    if (!stream.is_open()) {
+    if (!stream.is_open()) 
+    {
         std::cerr << "Could not open file for reading!" << "\n";
         std::exit(1);
     }
 
-    std::vector<char> buff {
+    std::vector<char> buff 
+    {
         std::istreambuf_iterator<char>(stream),
-                std::istreambuf_iterator<char>()};
+        std::istreambuf_iterator<char>()
+    };
+
     return buff;
 }
 
 
-cpr::Response put_Request(std::vector<char>& buff, fs::path& path) {
+cpr::Response put_Request(std::vector<char>& buff, fs::path& path)
+{
     fs::path file_Name = path.filename();
     auto url {cpr::Url{"http://localhost:9998/rmeta/form/text"}};
     auto buff_Size {cpr::Buffer{buff.begin(), buff.end(), file_Name}};
-    // Set maxEmbeddedResources to 0 to Return metadata for the parent file/container (e.g. zip) only.
+    // Set maxEmbeddedResources to 0 for parent object metadata only.
     auto header {cpr::Header {{"maxEmbeddedResources", "0",},
                               {"X-Tika-OCRskipOcr", "true"},
                               {"accept", "application/json"}}};
 
     cpr::Response response {cpr::Post(url, header, cpr::Multipart{{file_Name, buff_Size}})};
 
-    if (response.status_code != 200) {
-        std::cout << "Failed to processes request. Error code: " << response.status_code << " . Check Tika Server.\n"
+    if (response.status_code != 200) 
+    {
+        std::cout << "Failed to processes request. Error code: " 
+                  << response.status_code << " . Check Tika Server.\n"
                   << "Path: " << path.relative_path() << "\n";
     }
+
     return response;
 }
 
+// Type of JSON value
+// enum Type {
+//     kNullType = 0,      //!< null
+//     kFalseType = 1,     //!< false
+//     kTrueType = 2,      //!< true
+//     kObjectType = 3,    //!< object
+//     kArrayType = 4,     //!< array
+//     kStringType = 5,    //!< string
+//     kNumberType = 6     //!< number
+// };
 
-void json_Parser(cpr::Response& response) {
-    rj::Document document;
-    std::string json {response.text};
-    const char* str_JSON(json.c_str());
-    document.Parse(str_JSON);
+void parse_Array(rj::Document& doc)
+{
+    for (auto& member : doc.GetArray())
+    {
+        if (member.IsObject())
+        {
+            for (auto& key : member.GetObject())
+            {
+                std::cout << key.name.GetString() << ": ";
 
-    if (document.IsArray()) {
-        for (auto& member : document[0].GetObject()) {
-            std::string key = member.name.GetString();
-            meta_Keys.emplace(key);
+                if (key.value.IsArray())
+                {
+                    unsigned int array_Size = key.value.Size();
+
+                    std::cout  << "[ ";
+
+                    for (auto& value : key.value.GetArray())
+                    {
+                        std::cout << value.GetString();
+
+                        if (array_Size > 0)
+                        {
+                            --array_Size;
+                            std::cout << ", ";
+                        }
+                    }
+                    std::cout  << " ]\n";
+                }
+                else
+                {
+                    std::cout << key.value.GetString() << '\n';
+                }
+            }
         }
     }
-    else if (document.IsObject()) {
-        for (auto& member : document.GetObject()) {
-            std::string key = member.name.GetString();;
+//        std::string key = member.name.GetString();
+//
+//        std::cout << key << ": [ ";
+//
+//        if (member.value.IsArray())
+//        {
+//            auto value_Array = member.value.GetArray();
+//            unsigned int size = member.value.Size();
+//
+//            for (auto& entry : value_Array)
+//            {
+//                std::cout << entry.GetString();
+//
+//                if (size > 0)
+//                {
+//                    --size;
+//                    std::cout << ", ";
+//                }
+//            }
+//        }
+//        else
+//        {
+//            std::string value = member.name.GetString();
+//
+//            std::cout << value << '\n';
+//        }
+//
+//        meta_Keys.emplace(key);
+//    }
+}
+
+void json_Parser(cpr::Response& response) 
+{
+    rj::Document document;
+    std::string json {response.text};
+    const char* str_Json(json.c_str());
+
+    if(!document.HasParseError())
+        document.Parse(str_Json);
+
+    if(document.IsArray())
+    {
+        parse_Array(document);
+    }
+    else if (document.IsObject()) 
+    {
+        for (auto& member : document.GetObject()) 
+        {
+            std::string key = member.name.GetString();
+            
+            std::cout << key << ": ";
+
+            if (member.value.IsArray()) 
+            {
+                auto value = member.value.GetArray();
+                unsigned int size = member.value.Size();
+
+               for (auto& entry : value) 
+               {
+                   std::cout << entry.GetString();
+                   if (size > 0)
+                   {
+                    --size;
+                    std::cout << ", ";
+                   }
+               }
+            }
+            else {
+                std::string value = member.name.GetString();
+
+                std::cout << value << '\n';
+            }
             meta_Keys.emplace(key);
         }
     }
@@ -78,7 +188,7 @@ void parse_Helper(fs::path& path) {
 
 void parse_Dir_Entry(const fs::directory_entry& dir_Entry) {
     if (!dir_Entry.is_regular_file()) {
-        ;
+        std::cout << "Not a file. Moving on\n";
     }
     else {
         parse_Helper((fs::path &) dir_Entry.path());
@@ -103,7 +213,7 @@ void edit_File() {
 
     if (!key_File.is_open()){
         std::cout << "Failed to open file.\n";
-        return 1;
+        std::exit (1);
     }
 
     while (getline(key_File, line)){
