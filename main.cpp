@@ -4,36 +4,36 @@
 #include <set>
 
 #include <rapidjson/document.h>
+#include "rapidjson/error/en.h"
 #include <cpr/cpr.h>
 
 namespace  fs = std::filesystem;
 namespace  rj = rapidjson;
 
-std::set<std::string> meta_Keys;
+std::set<std::string> remaining_Keys;
+std::set<std::string> DublinCore_Keys;
+std::set<std::string> TikaCore_Keys;
+std::set<std::string> FlatFile_Keys;
 
-std::vector<char> file_Buffer (fs::path& path)
-{
+std::vector<std::string> file_Content;
+
+std::vector<char> file_Buffer (fs::path& path) {
     //Open the file.
     std::ifstream stream {path.string()};
 
-    if (!stream.is_open()) 
-    {
+    if (!stream.is_open()) {
         std::cerr << "Could not open file for reading!" << "\n";
         std::exit(1);
     }
 
-    std::vector<char> buff 
-    {
+    std::vector<char> buff {
         std::istreambuf_iterator<char>(stream),
         std::istreambuf_iterator<char>()
     };
-
     return buff;
 }
 
-
-cpr::Response put_Request(std::vector<char>& buff, fs::path& path)
-{
+cpr::Response put_Request(std::vector<char>& buff, fs::path& path) {
     fs::path file_Name = path.filename();
     auto url {cpr::Url{"http://localhost:9998/rmeta/form/text"}};
     auto buff_Size {cpr::Buffer{buff.begin(), buff.end(), file_Name}};
@@ -47,133 +47,94 @@ cpr::Response put_Request(std::vector<char>& buff, fs::path& path)
     if (response.status_code != 200) 
     {
         std::cout << "Failed to processes request. Error code: " 
-                  << response.status_code << " . Check Tika Server.\n"
+                  << response.status_code << ". \n"
                   << "Path: " << path.relative_path() << "\n";
     }
-
     return response;
 }
 
-// Type of JSON value
-// enum Type {
-//     kNullType = 0,      //!< null
-//     kFalseType = 1,     //!< false
-//     kTrueType = 2,      //!< true
-//     kObjectType = 3,    //!< object
-//     kArrayType = 4,     //!< array
-//     kStringType = 5,    //!< string
-//     kNumberType = 6     //!< number
-// };
-
-void parse_Array(rj::Document& doc)
-{
-    for (auto& member : doc.GetArray())
-    {
-        if (member.IsObject())
-        {
-            for (auto& key : member.GetObject())
-            {
-                std::cout << key.name.GetString() << ": ";
-
-                if (key.value.IsArray())
-                {
-                    unsigned int array_Size = key.value.Size();
-
-                    std::cout  << "[ ";
-
-                    for (auto& value : key.value.GetArray())
-                    {
-                        std::cout << value.GetString();
-
-                        if (array_Size > 0)
-                        {
-                            --array_Size;
-                            std::cout << ", ";
-                        }
-                    }
-                    std::cout  << " ]\n";
-                }
-                else
-                {
-                    std::cout << key.value.GetString() << '\n';
-                }
-            }
+void create_Sets(rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>> &key) {
+    std::string key_Name = key.name.GetString();
+    //Create unique set of keys.
+    remaining_Keys.emplace(key_Name);
+    //Make case-insensitive for comparison.
+    std::transform(key_Name.begin(), key_Name.end(), key_Name.begin(), ::tolower);
+    //Add Dublin Core metadata fields
+    std::vector<std::string> dc_Keys {"dc:", "dc.", "dc_", "dcterms", "dctm"};
+    for (auto& term: dc_Keys) {
+        std::cout << "\n\n DC terms to search for: " << term << "\n\n";
+        std::size_t found = key_Name.find(term);
+        if (found != std::string::npos) {
+            DublinCore_Keys.emplace(key_Name);
         }
     }
-//        std::string key = member.name.GetString();
-//
-//        std::cout << key << ": [ ";
-//
-//        if (member.value.IsArray())
-//        {
-//            auto value_Array = member.value.GetArray();
-//            unsigned int size = member.value.Size();
-//
-//            for (auto& entry : value_Array)
-//            {
-//                std::cout << entry.GetString();
-//
-//                if (size > 0)
-//                {
-//                    --size;
-//                    std::cout << ", ";
-//                }
-//            }
-//        }
-//        else
-//        {
-//            std::string value = member.name.GetString();
-//
-//            std::cout << value << '\n';
-//        }
-//
-//        meta_Keys.emplace(key);
-//    }
+}
+
+void parse_Object(rj::GenericValue<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>>& member) {
+    if (!member.IsObject()) {
+        std::cout << "JSON is not an object. Failed to parse. Type is: " << strerror(member.GetType());
+    }
+    
+    for (auto& key : member.GetObject())
+    {
+        create_Sets(key);
+
+        //Logic to print JSON as Key : Value pairs with proper formatting for values that are arrays.
+        std::cout << key.name.GetString() << ": ";
+
+        if (key.value.IsArray())
+        {
+            // Subtract 1 to remove comma from printing after last value in array.
+            unsigned int array_Size = key.value.Size() - 1;
+
+            std::cout  << "[ ";
+
+            for (auto& value : key.value.GetArray())
+            {
+                std::cout << value.GetString();
+
+                if (array_Size > 0)
+                {
+                    --array_Size;
+                    std::cout << ", ";
+                }
+            }
+            std::cout  << " ]\n";
+        }
+        else
+        {
+            std::cout << key.value.GetString() << '\n';
+        }
+    }
+}
+
+void parse_Array(rj::Document& doc) {
+    for (auto &member: doc.GetArray()) {
+        if (member.IsObject()) {
+            parse_Object(member);
+        }
+    }
 }
 
 void json_Parser(cpr::Response& response) 
 {
+    //Validate json schema.
     rj::Document document;
-    std::string json {response.text};
-    const char* str_Json(json.c_str());
-
-    if(!document.HasParseError())
-        document.Parse(str_Json);
-
-    if(document.IsArray())
-    {
-        parse_Array(document);
+    if (document.HasParseError()){
+        std::cout << "File is not valid JSON. Error: " << GetParseError_En(document.GetParseError());
     }
-    else if (document.IsObject()) 
-    {
-        for (auto& member : document.GetObject()) 
-        {
-            std::string key = member.name.GetString();
-            
-            std::cout << key << ": ";
+    
+    std::string json {response.text};
+    const char* c_Json(json.c_str());
 
-            if (member.value.IsArray()) 
-            {
-                auto value = member.value.GetArray();
-                unsigned int size = member.value.Size();
+    if(!document.HasParseError()) {
+        document.Parse(c_Json);
+    }
 
-               for (auto& entry : value) 
-               {
-                   std::cout << entry.GetString();
-                   if (size > 0)
-                   {
-                    --size;
-                    std::cout << ", ";
-                   }
-               }
-            }
-            else {
-                std::string value = member.name.GetString();
-
-                std::cout << value << '\n';
-            }
-            meta_Keys.emplace(key);
-        }
+    if(document.IsArray()) {
+        parse_Array(document);
+    } else if (document.IsObject()) {
+        parse_Object(document);
     }
 }
 
@@ -231,7 +192,6 @@ void edit_File() {
     new_File.close();
 }
 
-
 int main(int argc,char* argv[]) {
     //If a path is not passed via CLI.
     if (argc != 2) {
@@ -263,9 +223,21 @@ int main(int argc,char* argv[]) {
         }
     }
 
-    output_File(meta_Keys);
 
-    edit_File();
+    std::cout << "\nFrom DC keys\n\n";
+    
+    for (auto& dc : DublinCore_Keys) {
+        std::cout << dc << '\n';
+    }
+
+    std::cout << "\nFrom all keys\n\n";
+
+    for (auto& dc : remaining_Keys) {
+        std::cout << dc << '\n';
+    }
+//    output_File(remaining_Keys);
+//
+//    edit_File();
 
     return 0;
 }
