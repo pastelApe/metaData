@@ -42,6 +42,9 @@
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
   <component name="ProjectId" id="20Vmvzn1mxDN41nVRS8tqIzvos8" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
@@ -58,14 +61,14 @@
     <property name="cf.first.check.clang-format" value="false" />
     <property name="cidr.known.project.marker" value="true" />
     <property name="cmake.loaded.for.project" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../key_removal" />
+    <property name="last_opened_file_path" value="$USER_HOME$/Downloads/Dracula PRO — Zeno Rocha/themes/jetbrains/dracula-pro.zip" />
     <property name="nodejs_package_manager_path" value="npm" />
-    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors" />
+    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
   </component>
   <component name="RunManager" selected="CMake Application.metaData">
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
+    <configuration default="true" type="GradleAppRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+        <option name="com.jetbrains.cidr.cpp.gradle.execution.GradleNativeBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
     <configuration name="cpr" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metaData" TARGET_NAME="cpr" CONFIG_NAME="Debug">
@@ -119,15 +122,15 @@
       </method>
     </configuration>
     <list>
-      <item itemvalue="CMake Application.metaData" />
       <item itemvalue="CMake Application.cpr" />
-      <item itemvalue="CMake Application.uninstall" />
-      <item itemvalue="CMake Application.libcurl" />
       <item itemvalue="CMake Application.gmock" />
       <item itemvalue="CMake Application.gmock_main" />
       <item itemvalue="CMake Application.gtest" />
       <item itemvalue="CMake Application.gtest_main" />
+      <item itemvalue="CMake Application.libcurl" />
+      <item itemvalue="CMake Application.metaData" />
       <item itemvalue="CMake Application.mongoose" />
+      <item itemvalue="CMake Application.uninstall" />
       <item itemvalue="CMake Application.zlib" />
     </list>
   </component>
@@ -163,7 +166,11 @@
       <workItem from="1638229701561" duration="93000" />
       <workItem from="1638230444958" duration="229000" />
       <workItem from="1638397985749" duration="9923000" />
-      <workItem from="1638470185399" duration="20822000" />
+      <workItem from="1638470185399" duration="20967000" />
+      <workItem from="1638800353098" duration="57000" />
+      <workItem from="1638800753266" duration="1446000" />
+      <workItem from="1638802312588" duration="192000" />
+      <workItem from="1638802510451" duration="15454000" />
     </task>
     <servers />
   </component>
