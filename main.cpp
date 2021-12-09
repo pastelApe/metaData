@@ -31,55 +31,68 @@ std::vector<char> file_Buffer (fs::path& path) {
         std::istreambuf_iterator<char>(stream),
         std::istreambuf_iterator<char>()
     };
+    
     return buff;
 }
 
 cpr::Response put_Request(std::vector<char>& buff, fs::path& path) {
     fs::path file_Name = path.filename();
+    
     auto url {cpr::Url{"http://localhost:9998/rmeta/form/text"}};
     auto buff_Size {cpr::Buffer{buff.begin(), buff.end(), file_Name}};
+    
     // Set maxEmbeddedResources to 0 for parent object metadata only.
-    auto header {cpr::Header {{"maxEmbeddedResources", "0",},
-                              {"X-Tika-OCRskipOcr", "true"},
-                              {"accept", "application/json"}}};
+    auto header {cpr::Header {
+        {"maxEmbeddedResources", "0"},
+        {"X-Tika-OCRskipOcr", "true"},
+        {"accept", "application/json"}}};
 
     cpr::Response response {cpr::Post(url, header, cpr::Multipart{{file_Name, buff_Size}})};
 
-    if (response.status_code != 200) 
-    {
+    if (response.status_code != 200) {
         std::cout << "Failed to processes request. Error code: " 
                   << response.status_code << ". \n"
                   << "Path: " << path.relative_path() << "\n";
     }
+    
     return response;
 }
 
-bool found (std::vector<std::string>& keys, std::string& to_Find) {
-    bool find = std::any_of(keys.begin(), keys.end(), [&](auto key) {
+bool subStr_Found (std::vector<std::string>& keys, std::string& to_Find) {
+    bool found = std::any_of(keys.begin(), keys.end(), [&](auto key) {
         return (to_Find.find(key) != std::string::npos);
     });
-    return find;
+    
+    return found;
 }
 
 void create_Sets (rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>> &key) {
     std::string key_Name = key.name.GetString();
     all_Keys.emplace(key_Name);
+    
     //Make case-insensitive for comparison.
     std::string upper_Name = key_Name;
     std::transform(upper_Name.begin(), upper_Name.end(), upper_Name.begin(), ::toupper);
+    
     //Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
     //This set also includes the Dublin Core properties.
     //Removed properties that can be stored in the flat file for later.
     std::vector<std::string> core_Keys {
         "ALTITUDE", "COMMENTS", "CONTRIBUTOR", "COVERAGE", "CREATED", "CREATOR", "CREATOR_TOOL", "DATE", "DC:",
         "DC.", "DC_", "DCTERMS:", "DCTM:", "DESCRIPTION", "EMBEDDED_RELATIONSHIP_ID", "EMBEDDED_RESOURCE_PATH",
-        "EMBEDDED_RESOURCE_TYPE", "FORMAT", "HAS_SIGNATURE", "IDENTIFIER", "LANGUAGE", "LATITUDE", "LONGITUDE",
+        "EMBEDDED_RESOURCE_TYPE", "HAS_SIGNATURE", "IDENTIFIER", "LANGUAGE", "LATITUDE", "LONGITUDE",
         "METADATA_DATE", "MODIFIED", "MODIFIER", "ORIGINAL_RESOURCE_NAME", "PRINT_DATE", "PROTECTED", "PUBLISHER",
         "RATING", "RELATION", "RESOURCE_NAME_KEY", "REVISION", "RIGHTS", "SOURCE", "SOURCE_PATH", "SUBJECT", "TITLE",
-        "TYPE"
+        //Removed as there are many possible keys with these substrings. Should return with the "dc" prefix.
+        //"FORMAT", "TYPE"
     };
 
-    if (found(core_Keys, upper_Name)) {
+    std::vector<std::string> ignore {"UNKNOWN"};
+
+    if (subStr_Found(ignore, upper_Name)) {
+        //Do nothing.
+        ;
+    } else if (subStr_Found(core_Keys, upper_Name)) {
         core_Set.emplace(key_Name);
     } else {
         remaining_Keys.emplace(key_Name);
@@ -88,6 +101,7 @@ void create_Sets (rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::
 
 void prettier_Printer(rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>> &key) {
     std::cout << key.name.GetString() << ": ";
+
     if (key.value.IsArray()) {
         // Subtract 1 to remove comma from printing after last value in array.
         unsigned int array_Size = key.value.Size() - 1;
@@ -107,7 +121,6 @@ void prettier_Printer(rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<
     }
 }
 
-
 void parse_Object(rj::GenericValue<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>>& member) {
     if (!member.IsObject()) {
         std::cout << "JSON is not an object. Failed to parse. Type is: " << strerror(member.GetType());
@@ -116,18 +129,21 @@ void parse_Object(rj::GenericValue<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::C
     for (auto &key: member.GetObject()) {
         create_Sets(key);
 
-        prettier_Printer(key);
+        std::string key_Name = key.name.GetString();
+
+//        if (key_Name == "X-TIKA:content")
+//            continue;
+//
+//        prettier_Printer(key);
     }
 }
 
 void parse_Array(rj::Document& doc) {
     for (auto &member: doc.GetArray()) {
-        if (member.IsObject()) {
+        if (member.IsObject()) 
             parse_Object(member);
-        }
     }
 }
-
 
 void parse_Document (rj::Document& document, const char* json) {
     document.Parse(json);
@@ -139,8 +155,7 @@ void parse_Document (rj::Document& document, const char* json) {
     }
 }
 
-
-void json_Parser(cpr::Response& response) {
+void parse_Json(cpr::Response& response) {
     //Validate json schema.
     rj::Document document;
     if (document.HasParseError()) {
@@ -153,14 +168,12 @@ void json_Parser(cpr::Response& response) {
     parse_Document(document, c_Json);
 }
 
-
 void parse_Helper(fs::path& path) {
     std::vector<char> buff {file_Buffer(path)};
     cpr::Response response {put_Request(buff, path)};
 
-    json_Parser(response);
+    parse_Json(response);
 }
-
 
 void parse_Dir_Entry(const fs::directory_entry& dir_Entry) {
     if (!dir_Entry.is_regular_file()) {
@@ -171,16 +184,14 @@ void parse_Dir_Entry(const fs::directory_entry& dir_Entry) {
     }
 }
 
-
 void output_File(std::set<std::string>& set) {
-    std::string path {"/home/xavier/Desktop/unique_keys.json"};
+    std::string path {"/home/xavier/Desktop/unique_keys.txt"};
     std::ofstream file(path);
 
     for (auto& i : set) {
         file << i << "\n";
     }
 }
-
 
 void edit_File() {
     std::ifstream key_File ("/home/xavier/Desktop/unique_keys.txt");
@@ -194,8 +205,8 @@ void edit_File() {
 
     while (getline(key_File, line)){
         std::string ignore = "Unknown";
-        std::size_t found = line.find(ignore);
-        if (found != std::string::npos) {
+        std::size_t subStr_Found = line.find(ignore);
+        if (subStr_Found != std::string::npos) {
             continue;
         }
         else {
@@ -206,6 +217,7 @@ void edit_File() {
     key_File.close();
     new_File.close();
 }
+
 
 int main(int argc,char* argv[]) {
     //If a path is not passed via CLI.
@@ -239,13 +251,13 @@ int main(int argc,char* argv[]) {
     }
 
 
-    std::cout << "\nFrom DC keys\n\n";
+    std::cout << "\nCore Keys\n\n";
     
     for (auto& dc : core_Set) {
         std::cout << dc << '\n';
     }
 
-    std::cout << "\nFrom all keys\n\n";
+    std::cout << "\nRemaining\n\n";
 
     for (auto& dc : remaining_Keys) {
         std::cout << dc << '\n';
