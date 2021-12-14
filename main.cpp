@@ -3,6 +3,7 @@
 #include <iostream>
 #include <variant>
 #include <vector>
+#include <set>
 
 #include <cpr/cpr.h>
 
@@ -14,10 +15,87 @@
 namespace  fs = std::filesystem;
 namespace  rj = rapidjson;
 
+typedef std::variant<nullptr_t, int, unsigned, int64_t, uint64_t, double, std::string,
+        std::vector<std::variant<nullptr_t, int, unsigned, int64_t, uint64_t, double, std::string>>> v_Value;
+
 std::vector<std::string> file_Content;
 
-std::map<std::string, std::variant<nullptr_t, int, unsigned, int64_t, uint64_t, double, std::string>> core_Map;
+std::map<std::string, v_Value> core_Map;
 
+void parse_Object(rj::GenericValue<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>>& member);
+void parse_Array(rj::Document& doc);
+
+std::variant<v_Value> type_Handler(rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>> &key) {
+    std::variant<v_Value> value;
+
+    /*
+     enum Type {
+         kNullType = 0,      //!< null
+         kFalseType = 1,     //!< false
+         kTrueType = 2,      //!< true
+         kObjectType = 3,    //!< object
+         kArrayType = 4,     //!< array
+         kStringType = 5,    //!< string
+         kNumberType = 6     //!< number
+     };
+    */
+
+    switch(key.value.GetType()) {
+        case rj::kNullType :
+            value = nullptr;
+            break;
+        case rj::kFalseType :
+            value = false;
+            break;
+        case rj::kTrueType  :
+            value = true;
+            break;
+        case rj::kObjectType :
+            for (auto& oVal: key.value.GetObject()){
+                switch(oVal.name.GetType()) {
+                    case rj::kNullType :
+                        value = nullptr;
+                        break;
+                    case rj::kFalseType :
+                        value = false;
+                        break;
+                    case rj::kTrueType  :
+                        value = true;
+                        break;
+                    case rj::kArrayType  :
+                        for (auto& aVal: key.value.GetArray()) {
+                            if (aVal.IsObject()) {
+                                parse_Object(aVal);
+                            }
+                        }
+                        break;
+                    case rj::kStringType :
+                        //TODO;
+                        break;
+                    case rj::kNumberType :
+                        if (key.value.IsUint())
+                            break;
+                    default :
+                        std::cout << rj::kValidateErrorType << '\n';
+                        break;
+                }
+            }
+            break;
+        case rj::kArrayType  :
+            //TODO;
+            break;
+        case rj::kStringType :
+            //TODO;
+            break;
+        case rj::kNumberType :
+            if (key.value.IsUint())
+                break;
+        default :
+            std::cout << rj::kValidateErrorType << '\n';
+            break;
+    }
+    return value;
+}
 std::vector<char> file_Buffer (fs::path& path) {
     //Open the file.
     std::ifstream stream {path.string()};
@@ -28,8 +106,8 @@ std::vector<char> file_Buffer (fs::path& path) {
     }
 
     std::vector<char> buff {
-        std::istreambuf_iterator<char>(stream),
-        std::istreambuf_iterator<char>()
+            std::istreambuf_iterator<char>(stream),
+            std::istreambuf_iterator<char>()
     };
 
     return buff;
@@ -69,45 +147,8 @@ bool subStr_Found (std::vector<std::string>& keys, std::string& to_Find) {
 void create_Maps (rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>> &key) {
     std::string key_Name = key.name.GetString();
 
-    /*
-    enum Type {
-        kNullType = 0,      //!< null
-        kFalseType = 1,     //!< false
-        kTrueType = 2,      //!< true
-        kObjectType = 3,    //!< object
-        kArrayType = 4,     //!< array
-        kStringType = 5,    //!< string
-        kNumberType = 6     //!< number
-    };
-    */
-
-    std::variant<nullptr_t, int, unsigned, int64_t, uint64_t, double, std::string> value {};
-
-    switch(key.value.GetType()) {
-        case rj::kNullType :
-            value = nullptr;
-            break;
-        case rj::kFalseType :
-            break;
-        case rj::kTrueType  :
-            //TODO;
-            break;
-        case rj::kObjectType :
-            //TODO;
-            break;
-        case rj::kArrayType  :
-            //TODO;
-            break;
-        case rj::kStringType :
-            //TODO;
-            break;
-        case rj::kNumberType :
-            if (key.value.IsUint())
-            break;
-        default :
-            std::cout << rj::kValidateErrorType << '\n';
-            break;
-    }
+    // Determine the value type
+    type_Handler(key);
 
     //Make case-insensitive for comparison.
     std::string upper_Name = key_Name;
@@ -117,12 +158,12 @@ void create_Maps (rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::
         This set also includes the Dublin Core properties.
         Removed properties that can be stored in the flat file for later. */
     std::vector<std::string> core_Keys {
-        "ALTITUDE", "COMMENTS", "CONTRIBUTOR", "COVERAGE", "CREATED", "CREATOR", "CREATOR_TOOL", "DATE", "DC:",
-        "DC.", "DC_", "DCTERMS:", "DCTM:", "DESCRIPTION", "EMBEDDED_RELATIONSHIP_ID", "EMBEDDED_RESOURCE_PATH",
-        "EMBEDDED_RESOURCE_TYPE", "HAS_SIGNATURE", "IDENTIFIER", "LANGUAGE", "LATITUDE", "LONGITUDE",
-        "METADATA_DATE", "MODIFIED", "MODIFIER", "ORIGINAL_RESOURCE_NAME", "PRINT_DATE", "PROTECTED", "PUBLISHER",
-        "RATING", "RELATION", "RESOURCE_NAME_KEY", "REVISION", "RIGHTS", "SOURCE", "SOURCE_PATH", "SUBJECT", "TITLE",
-        // Matched many keys with these substrings. Should return with the "dc" prefix. Removed "FORMAT", "TYPE".
+            "ALTITUDE", "COMMENTS", "CONTRIBUTOR", "COVERAGE", "CREATED", "CREATOR", "CREATOR_TOOL", "DATE", "DC:",
+            "DC.", "DC_", "DCTERMS:", "DCTM:", "DESCRIPTION", "EMBEDDED_RELATIONSHIP_ID", "EMBEDDED_RESOURCE_PATH",
+            "EMBEDDED_RESOURCE_TYPE", "HAS_SIGNATURE", "IDENTIFIER", "LANGUAGE", "LATITUDE", "LONGITUDE",
+            "METADATA_DATE", "MODIFIED", "MODIFIER", "ORIGINAL_RESOURCE_NAME", "PRINT_DATE", "PROTECTED", "PUBLISHER",
+            "RATING", "RELATION", "RESOURCE_NAME_KEY", "REVISION", "RIGHTS", "SOURCE", "SOURCE_PATH", "SUBJECT", "TITLE",
+            // Matched many keys with these substrings. Should return with the "dc" prefix. Removed "FORMAT", "TYPE".
     };
 
     std::vector<std::string> ignore {"UNKNOWN"};
@@ -175,20 +216,15 @@ void parse_Object(rj::GenericValue<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::C
     }
 }
 
-void parse_Array(rj::Document& doc) {
-    for (auto &member: doc.GetArray()) {
-        if (member.IsObject())
-            parse_Object(member);
-    }
-}
-
 void parse_Document (rj::Document& document, const char* json) {
     document.Parse(json);
 
-    if(document.IsArray()) {
-        parse_Array(document);
-    } else {
+    if(!document.IsArray())
         parse_Object(document);
+
+    for (auto &member: document.GetArray()) {
+        if (member.IsObject())
+            parse_Object(member);
     }
 }
 
@@ -229,7 +265,6 @@ void output_File(std::set<std::string>& set) {
         file << i << "\n";
     }
 }
-
 void edit_File() {
     std::ifstream key_File ("/home/xavier/Desktop/unique_keys.txt");
     std::ofstream new_File("/home/xavier/Desktop/unique_keys_edit.txt");
@@ -263,46 +298,19 @@ int main(int argc,char* argv[]) {
         return 1;
     }
     else {
-        fs::path path {argv[1]};
+        fs::path path{argv[1]};
         try {
             fs::exists(path);
         }
-        catch (fs::filesystem_error const& fs_error) {
+        catch (fs::filesystem_error const &fs_error) {
             std::cout
-                    << "what(): "           << fs_error.what()                      << "\n"
-                    << "path1():"           << fs_error.path1()                     << "\n"
-                    << "path2():"           << fs_error.path2()                     << "\n"
-                    << "code().value():   " << fs_error.code().value()              << "\n"
-                    << "code().message(): " << fs_error.code().message()            << "\n"
-                    << "code().category():" << fs_error.code().category().name()    << "\n";
-        }
-
-        if (!is_directory(path)) {
-            parse_Helper(path);
-        }
-        else {
-            for (auto &dir_Entry: fs::recursive_directory_iterator(path)) {
-                parse_Dir_Entry(dir_Entry);
-            }
+                    << "what(): " << fs_error.what() << "\n"
+                    << "path1():" << fs_error.path1() << "\n"
+                    << "path2():" << fs_error.path2() << "\n"
+                    << "code().value():   " << fs_error.code().value() << "\n"
+                    << "code().message(): " << fs_error.code().message() << "\n"
+                    << "code().category():" << fs_error.code().category().name() << "\n";
         }
     }
-
-
-    std::cout << "\nCore Keys\n\n";
-
-    for (auto& dc : core_Set) {
-        std::cout << dc << '\n';
-    }
-
-    std::cout << "\nRemaining\n\n";
-
-    for (auto& dc : remaining_Keys) {
-        std::cout << dc << '\n';
-    }
-//    output_File(remaining_Keys);
-//
-//    edit_File();
-
     return 0;
 }
-
