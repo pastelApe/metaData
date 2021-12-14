@@ -1,22 +1,22 @@
 #include <filesystem>
+#include <initializer_list>
 #include <iostream>
+#include <variant>
 #include <vector>
-#include <set>
-
-#include <rapidjson/document.h>
-#include "rapidjson/error/en.h"
 
 #include <cpr/cpr.h>
+
+#include <rapidjson/document.h>
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/error/en.h"
 
 namespace  fs = std::filesystem;
 namespace  rj = rapidjson;
 
-//Sets to store the metadata properties.
-std::set<std::string> all_Keys;
-std::set<std::string> core_Set;
-std::set<std::string> remaining_Keys;
-
 std::vector<std::string> file_Content;
+
+std::map<std::string, std::variant<nullptr_t, int, unsigned, int64_t, uint64_t, double, std::string>> core_Map;
 
 std::vector<char> file_Buffer (fs::path& path) {
     //Open the file.
@@ -31,69 +31,106 @@ std::vector<char> file_Buffer (fs::path& path) {
         std::istreambuf_iterator<char>(stream),
         std::istreambuf_iterator<char>()
     };
-    
+
     return buff;
 }
 
 cpr::Response put_Request(std::vector<char>& buff, fs::path& path) {
     fs::path file_Name = path.filename();
-    
+
     auto url {cpr::Url{"http://localhost:9998/rmeta/form/text"}};
     auto buff_Size {cpr::Buffer{buff.begin(), buff.end(), file_Name}};
-    
+
     // Set maxEmbeddedResources to 0 for parent object metadata only.
-    auto header {cpr::Header {
-        {"maxEmbeddedResources", "0"},
-        {"X-Tika-OCRskipOcr", "true"},
-        {"accept", "application/json"}}};
+    auto header {cpr::Header{ {"maxEmbeddedResources", "0"},
+                              {"X-Tika-OCRskipOcr", "true"},
+                              {"accept", "application/json"}}};
 
     cpr::Response response {cpr::Post(url, header, cpr::Multipart{{file_Name, buff_Size}})};
 
     if (response.status_code != 200) {
-        std::cout << "Failed to processes request. Error code: " 
+        std::cout << "Failed to processes request. Error code: "
                   << response.status_code << ". \n"
-                  << "Path: " << path.relative_path() << "\n";
+                  << "Failed Path: " << path.relative_path() << "\n";
     }
-    
+
     return response;
 }
 
+// Look for any string included in the vector.
 bool subStr_Found (std::vector<std::string>& keys, std::string& to_Find) {
     bool found = std::any_of(keys.begin(), keys.end(), [&](auto key) {
         return (to_Find.find(key) != std::string::npos);
     });
-    
+
     return found;
 }
 
-void create_Sets (rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>> &key) {
+void create_Maps (rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>> &key) {
     std::string key_Name = key.name.GetString();
-    all_Keys.emplace(key_Name);
-    
+
+    /*
+    enum Type {
+        kNullType = 0,      //!< null
+        kFalseType = 1,     //!< false
+        kTrueType = 2,      //!< true
+        kObjectType = 3,    //!< object
+        kArrayType = 4,     //!< array
+        kStringType = 5,    //!< string
+        kNumberType = 6     //!< number
+    };
+    */
+
+    std::variant<nullptr_t, int, unsigned, int64_t, uint64_t, double, std::string> value {};
+
+    switch(key.value.GetType()) {
+        case rj::kNullType :
+            value = nullptr;
+            break;
+        case rj::kFalseType :
+            break;
+        case rj::kTrueType  :
+            //TODO;
+            break;
+        case rj::kObjectType :
+            //TODO;
+            break;
+        case rj::kArrayType  :
+            //TODO;
+            break;
+        case rj::kStringType :
+            //TODO;
+            break;
+        case rj::kNumberType :
+            if (key.value.IsUint())
+            break;
+        default :
+            std::cout << rj::kValidateErrorType << '\n';
+            break;
+    }
+
     //Make case-insensitive for comparison.
     std::string upper_Name = key_Name;
     std::transform(upper_Name.begin(), upper_Name.end(), upper_Name.begin(), ::toupper);
-    
-    //Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
-    //This set also includes the Dublin Core properties.
-    //Removed properties that can be stored in the flat file for later.
+
+    /*  Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
+        This set also includes the Dublin Core properties.
+        Removed properties that can be stored in the flat file for later. */
     std::vector<std::string> core_Keys {
         "ALTITUDE", "COMMENTS", "CONTRIBUTOR", "COVERAGE", "CREATED", "CREATOR", "CREATOR_TOOL", "DATE", "DC:",
         "DC.", "DC_", "DCTERMS:", "DCTM:", "DESCRIPTION", "EMBEDDED_RELATIONSHIP_ID", "EMBEDDED_RESOURCE_PATH",
         "EMBEDDED_RESOURCE_TYPE", "HAS_SIGNATURE", "IDENTIFIER", "LANGUAGE", "LATITUDE", "LONGITUDE",
         "METADATA_DATE", "MODIFIED", "MODIFIER", "ORIGINAL_RESOURCE_NAME", "PRINT_DATE", "PROTECTED", "PUBLISHER",
         "RATING", "RELATION", "RESOURCE_NAME_KEY", "REVISION", "RIGHTS", "SOURCE", "SOURCE_PATH", "SUBJECT", "TITLE",
-        //Removed as there are many possible keys with these substrings. Should return with the "dc" prefix.
-        //"FORMAT", "TYPE"
+        // Matched many keys with these substrings. Should return with the "dc" prefix. Removed "FORMAT", "TYPE".
     };
 
     std::vector<std::string> ignore {"UNKNOWN"};
 
     if (subStr_Found(ignore, upper_Name)) {
         //Do nothing.
-        ;
     } else if (subStr_Found(core_Keys, upper_Name)) {
-        core_Set.emplace(key_Name);
+        core_Map.emplace(key_Name, );
     } else {
         remaining_Keys.emplace(key_Name);
     }
@@ -127,20 +164,20 @@ void parse_Object(rj::GenericValue<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::C
     }
 
     for (auto &key: member.GetObject()) {
-        create_Sets(key);
+        create_Maps(key);
 
         std::string key_Name = key.name.GetString();
 
 //        if (key_Name == "X-TIKA:content")
 //            continue;
-//
+
 //        prettier_Printer(key);
     }
 }
 
 void parse_Array(rj::Document& doc) {
     for (auto &member: doc.GetArray()) {
-        if (member.IsObject()) 
+        if (member.IsObject())
             parse_Object(member);
     }
 }
@@ -161,7 +198,7 @@ void parse_Json(cpr::Response& response) {
     if (document.HasParseError()) {
         std::cout << "File is not valid JSON. Error: " << GetParseError_En(document.GetParseError());
     }
-    
+
     std::string json {response.text};
     const char* c_Json(json.c_str());
 
@@ -205,8 +242,8 @@ void edit_File() {
 
     while (getline(key_File, line)){
         std::string ignore = "Unknown";
-        std::size_t subStr_Found = line.find(ignore);
-        if (subStr_Found != std::string::npos) {
+        std::size_t found = line.find(ignore);
+        if (found != std::string::npos) {
             continue;
         }
         else {
@@ -252,7 +289,7 @@ int main(int argc,char* argv[]) {
 
 
     std::cout << "\nCore Keys\n\n";
-    
+
     for (auto& dc : core_Set) {
         std::cout << dc << '\n';
     }
