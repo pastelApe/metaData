@@ -7,7 +7,8 @@
 
 #include <cpr/cpr.h>
 
-#include <rapidjson/document.h>
+#include "rapidjson/document.h"
+#include "rapidjson/reader.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/error/en.h"
@@ -15,87 +16,71 @@
 namespace  fs = std::filesystem;
 namespace  rj = rapidjson;
 
-typedef std::variant<nullptr_t, int, unsigned, int64_t, uint64_t, double, std::string,
-        std::vector<std::variant<nullptr_t, int, unsigned, int64_t, uint64_t, double, std::string>>> v_Value;
+typedef std::vector<std::variant<bool, long long int, unsigned long long int, double, std::string>> v_Vector;
+typedef std::variant<bool, long long int, unsigned long long int, double, std::string, v_Vector> v_Variant;
+
 
 std::vector<std::string> file_Content;
 
-std::map<std::string, v_Value> core_Map;
+std::map<std::string, rj::Value> MessageMap;
 
-void parse_Object(rj::GenericValue<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>>& member);
-void parse_Array(rj::Document& doc);
+std::string key;
+rj::Value value;
 
-std::variant<v_Value> type_Handler(rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>> &key) {
-    std::variant<v_Value> value;
+struct MyHandler : public rj::BaseReaderHandler<rj::UTF8<>, MyHandler> {
 
-    /*
-     enum Type {
-         kNullType = 0,      //!< null
-         kFalseType = 1,     //!< false
-         kTrueType = 2,      //!< true
-         kObjectType = 3,    //!< object
-         kArrayType = 4,     //!< array
-         kStringType = 5,    //!< string
-         kNumberType = 6     //!< number
-     };
-    */
 
-    switch(key.value.GetType()) {
-        case rj::kNullType :
-            value = nullptr;
-            break;
-        case rj::kFalseType :
-            value = false;
-            break;
-        case rj::kTrueType  :
-            value = true;
-            break;
-        case rj::kObjectType :
-            for (auto& oVal: key.value.GetObject()){
-                switch(oVal.name.GetType()) {
-                    case rj::kNullType :
-                        value = nullptr;
-                        break;
-                    case rj::kFalseType :
-                        value = false;
-                        break;
-                    case rj::kTrueType  :
-                        value = true;
-                        break;
-                    case rj::kArrayType  :
-                        for (auto& aVal: key.value.GetArray()) {
-                            if (aVal.IsObject()) {
-                                parse_Object(aVal);
-                            }
-                        }
-                        break;
-                    case rj::kStringType :
-                        //TODO;
-                        break;
-                    case rj::kNumberType :
-                        if (key.value.IsUint())
-                            break;
-                    default :
-                        std::cout << rj::kValidateErrorType << '\n';
-                        break;
-                }
-            }
-            break;
-        case rj::kArrayType  :
-            //TODO;
-            break;
-        case rj::kStringType :
-            //TODO;
-            break;
-        case rj::kNumberType :
-            if (key.value.IsUint())
-                break;
-        default :
-            std::cout << rj::kValidateErrorType << '\n';
-            break;
+    bool Null() {
+        value = "Null";
+        return true;
     }
-    return value;
-}
+
+    bool Bool(bool b) {
+        value = b;
+        return true;
+    }
+
+    bool Int(int i) {
+        value = (long long) i;
+        return true;
+    }
+
+    bool Uint(unsigned u) {
+        value = (unsigned long long) u;
+        return true;
+    }
+
+    bool Int64(int64_t i) {
+        value = i;
+        return true;
+    }
+
+    bool Uint64(uint64_t u) {
+        value = u;
+        return true;
+    }
+
+    bool Double(double d) {
+        value = d;
+        return true;
+    }
+
+    bool String(const char* str, SizeType length, bool copy) {
+        value = (std::string) str;
+        return true;
+    }
+
+    bool StartObject() { return true; }
+
+    bool Key(const char* str, SizeType length, bool copy) {
+        key = (std::string) str;
+        return true;
+    }
+    bool EndObject(SizeType memberCount) { return true; }
+    bool StartArray() { return true; }
+    bool EndArray(SizeType elementCount) { return true; }
+};
+
 std::vector<char> file_Buffer (fs::path& path) {
     //Open the file.
     std::ifstream stream {path.string()};
@@ -146,9 +131,11 @@ bool subStr_Found (std::vector<std::string>& keys, std::string& to_Find) {
 
 void create_Maps (rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>> &key) {
     std::string key_Name = key.name.GetString();
-
+    v_Variant value;
     // Determine the value type
-    type_Handler(key);
+    if (key.value.GetType() == rj::kObjectType) {
+        type_Handler(key);
+    }
 
     //Make case-insensitive for comparison.
     std::string upper_Name = key_Name;
@@ -228,68 +215,25 @@ void parse_Document (rj::Document& document, const char* json) {
     }
 }
 
-void parse_Json(cpr::Response& response) {
-    //Validate json schema.
-    rj::Document document;
-    if (document.HasParseError()) {
-        std::cout << "File is not valid JSON. Error: " << GetParseError_En(document.GetParseError());
+void ParseMessage(cpr::Response& response) {
+    MyHandler handler;
+    rj::Reader reader;
+    std::string json {response.text};
+    rj::StringStream stream(json.c_str());
+
+    reader.IterativeParseInit();
+    while (!reader.IterativeParseComplete()) {
+        reader.IterativeParseNext<rj::kParseDefaultFlags>(stream, handler);
     }
 
-    std::string json {response.text};
-    const char* c_Json(json.c_str());
-
-    parse_Document(document, c_Json);
 }
 
 void parse_Helper(fs::path& path) {
     std::vector<char> buff {file_Buffer(path)};
     cpr::Response response {put_Request(buff, path)};
 
-    parse_Json(response);
+    ParseMessage(response);
 }
-
-void parse_Dir_Entry(const fs::directory_entry& dir_Entry) {
-    if (!dir_Entry.is_regular_file()) {
-        std::cout << "Not a file. Moving on\n";
-    }
-    else {
-        parse_Helper((fs::path &) dir_Entry.path());
-    }
-}
-
-void output_File(std::set<std::string>& set) {
-    std::string path {"/home/xavier/Desktop/unique_keys.txt"};
-    std::ofstream file(path);
-
-    for (auto& i : set) {
-        file << i << "\n";
-    }
-}
-void edit_File() {
-    std::ifstream key_File ("/home/xavier/Desktop/unique_keys.txt");
-    std::ofstream new_File("/home/xavier/Desktop/unique_keys_edit.txt");
-    std::string line;
-
-    if (!key_File.is_open()){
-        std::cout << "Failed to open file.\n";
-        std::exit (1);
-    }
-
-    while (getline(key_File, line)){
-        std::string ignore = "Unknown";
-        std::size_t found = line.find(ignore);
-        if (found != std::string::npos) {
-            continue;
-        }
-        else {
-            new_File << line << '\n';
-        }
-    }
-
-    key_File.close();
-    new_File.close();
-}
-
 
 int main(int argc,char* argv[]) {
     //If a path is not passed via CLI.
@@ -312,5 +256,8 @@ int main(int argc,char* argv[]) {
                     << "code().category():" << fs_error.code().category().name() << "\n";
         }
     }
+
+    parse_Helper(path);
+
     return 0;
 }
