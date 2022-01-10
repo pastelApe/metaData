@@ -16,6 +16,8 @@
 namespace  fs = std::filesystem;
 namespace  rj = rapidjson;
 
+//TODO Use boost with recursive_wrapper. Create a Namespace, Create a struct. Use a visitor on it. Hope there is docs of this...
+
 typedef std::vector<std::variant<bool, long long int, unsigned long long int, double, std::string>> v_Vector;
 typedef std::variant<bool, long long int, unsigned long long int, double, std::string, v_Vector> v_Variant;
 
@@ -27,58 +29,32 @@ std::map<std::string, rj::Value> MessageMap;
 std::string key;
 rj::Value value;
 
-struct MyHandler : public rj::BaseReaderHandler<rj::UTF8<>, MyHandler> {
+//TODO private property
+//TODO function prop that returns std::move(private prop)
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "HideNonVirtualFunction"
 
-    bool Null() {
-        value = "Null";
+struct MyHandler : public BaseReaderHandler<UTF8<>, MyHandler> {
+    bool Null() { cout << "Null()" << endl; return true; }
+    bool Bool(bool b) { cout << "Bool(" << boolalpha << b << ")" << endl; return true; }
+    bool Int(int i) { cout << "Int(" << i << ")" << endl; return true; }
+    bool Uint(unsigned u) { cout << "Uint(" << u << ")" << endl; return true; }
+    bool Int64(int64_t i) { cout << "Int64(" << i << ")" << endl; return true; }
+    bool Uint64(uint64_t u) { cout << "Uint64(" << u << ")" << endl; return true; }
+    bool Double(double d) { cout << "Double(" << d << ")" << endl; return true; }
+    bool String(const char* str, SizeType length, bool copy) { 
+        cout << "String(" << str << ", " << length << ", " << boolalpha << copy << ")" << endl;
         return true;
     }
-
-    bool Bool(bool b) {
-        value = b;
+    bool StartObject() { cout << "StartObject()" << endl; return true; }
+    bool Key(const char* str, SizeType length, bool copy) { 
+        cout << "Key(" << str << ", " << length << ", " << boolalpha << copy << ")" << endl;
         return true;
     }
-
-    bool Int(int i) {
-        value = (long long) i;
-        return true;
-    }
-
-    bool Uint(unsigned u) {
-        value = (unsigned long long) u;
-        return true;
-    }
-
-    bool Int64(int64_t i) {
-        value = i;
-        return true;
-    }
-
-    bool Uint64(uint64_t u) {
-        value = u;
-        return true;
-    }
-
-    bool Double(double d) {
-        value = d;
-        return true;
-    }
-
-    bool String(const char* str, SizeType length, bool copy) {
-        value = (std::string) str;
-        return true;
-    }
-
-    bool StartObject() { return true; }
-
-    bool Key(const char* str, SizeType length, bool copy) {
-        key = (std::string) str;
-        return true;
-    }
-    bool EndObject(SizeType memberCount) { return true; }
-    bool StartArray() { return true; }
-    bool EndArray(SizeType elementCount) { return true; }
+    bool EndObject(SizeType memberCount) { cout << "EndObject(" << memberCount << ")" << endl; return true; }
+    bool StartArray() { cout << "StartArray()" << endl; return true; }
+    bool EndArray(SizeType elementCount) { cout << "EndArray(" << elementCount << ")" << endl; return true; }
 };
 
 std::vector<char> file_Buffer (fs::path& path) {
@@ -185,6 +161,41 @@ void prettier_Printer(rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<
         std::cout << key.value.GetString() << '\n';
     }
 }
+
+
+//TODO Type Handler Function. Recursive check on each item in an array and check val in objects. Return the property from the handler struct.
+
+//TODO Parse the document. CHeck for errors
+
+auto process_doc(const rj::Document& doc) {
+    std::map<std::string, VARIANT_PROP> props;
+    
+    if (doc.HasParseError()) {
+        //TODO figure out if I can use std::cout here
+        fprintf(stderr,"Error (offset) %u): %s",
+                (unsigned)doc.GetErrorOffset(),
+                rj::GetParseError_En(doc.GetParseError()));
+        std::cout << std::endl;
+    }
+    
+    //TODO if array, else object. return props
+}
+
+//TODO Use the ktypes to detect json docs type for error handling somewhere. 
+//TODO test against content-type: application/octet-stream (cpr)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void parse_Object(rj::GenericValue<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>>& member) {
     if (!member.IsObject()) {
