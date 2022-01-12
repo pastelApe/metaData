@@ -16,8 +16,12 @@
 #include "rapidjson/reader.h"
 #include "rapidjson/stringbuffer.h"
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 namespace  fs = std::filesystem;
 namespace  rj = rapidjson;
+
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 typedef boost::make_recursive_variant<
         bool,
@@ -26,49 +30,82 @@ typedef boost::make_recursive_variant<
         double,
         std::string,
         std::vector<boost::recursive_variant_>,
-                std::map<std::string, boost::recursive_variant_>
-                        >::type variant_type;
+        std::map<std::string, boost::recursive_variant_>>::type variant_type;
 
+/*--------------------------------------------------------------------------------------------------------------------*/
 
-class meta_value {
+struct Type_Handler : public rj::BaseReaderHandler<rj::UTF8<>, Type_Handler> {
 private:
     std::vector<variant_type> _props;
 public:
-    std::vector<variant_type> get_value(variant_type& v) {_props.emplace_back(std::move(v)); return _props;}
-};
+    std::vector<variant_type> get_value(auto& val) {_props.emplace_back(std::move(val)); return _props;}
+    variant_type type {};
 
-
-struct MyHandler : public rj::BaseReaderHandler<rj::UTF8<>, MyHandler> {
-    variant_type prop {};
-    
     bool Null() { return true; }
-    bool Bool(bool b) { prop = b; return true; }
-    bool Int(int i) { prop = static_cast<int64_t> (i); return true; }
-    bool Uint(unsigned u) { prop = static_cast<uint64_t> (u);  return true; }
-    bool Int64(int64_t i64) { prop = static_cast<int64_t> (i64) return true; }
-    bool Uint64(uint64_t u64) { prop = static_cast<unt64_t> (u64) ; return true; }
-    bool Double(double d) { prop = d; return true; }
-    bool String(const char* str, rj::SizeType length, bool copy) { prop = std::string(str, length) ; return true;
+    bool Bool(bool b) { type = b; return true; }
+    bool Int(int i) { type = static_cast<int64_t> (i); return true; }
+    bool Uint(unsigned u) { type = static_cast<uint64_t> (u);  return true; }
+    bool Int64(int64_t i64) { type = static_cast<int64_t> (i64) return true; }
+    bool Uint64(uint64_t u64) { type = static_cast<uint64_t> (u64) ; return true; }
+    bool Double(double d) { type = d; return true; }
+    bool String(const char* str, rj::SizeType length, bool copy) { type = std::string(str, length) ; return true;
     }
     bool StartObject() { return true; }
-    bool Key(const char* str, rj::SizeType length, bool copy) { prop = std::string(str, length); return true;
+    bool Key(const char* str, rj::SizeType length, bool copy) { type = std::string(str, length); return true;
     }
     bool EndObject(rj::SizeType memberCount) { return true; }
     bool StartArray() { return true; }
     bool EndArray(rj::SizeType elementCount) { return true; }
 };
 
-
-variant_type type_handler(const auto& value ) {
-    std::map<std:string, variant_type> meta {};
-    if (value.IsObject()) {
-        for (const auto& [key, val] : value) {
-
+variant_type value_parser(rj::GenericValue<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>>& value) {
+    Type_Handler handler;
+    if(value.IsObject()) {
+        for (auto& sub : value.GetObject()) {
+            sub.value.Accept(handler);
+            return ;
+    } else if (value.IsArray()){
+        for (auto &sub_value: value.GetArray()) {
+            value_parser(sub_value);
+        }
     }
 }
 
-/*--------------------------------------
+std::map<std::string ,variant_type> process_doc (rj::Document& doc, const char* json) {
+    doc.Parse(json);
+    std::map<std::string ,variant_type> meta_data {};
 
+    if (!doc.IsObject()) {
+        std::cout << "JSON is not an object. Failed to parse. Type is: " << strerror(doc.GetType());
+    } else {
+        for (auto& [key, value] : doc.GetObject()) {
+            variant_type prop = value_helper(value);
+
+
+
+//        if (key_Name == "X-TIKA:content")
+//            continue;
+
+//        prettier_Printer(key);
+        }
+    }
+
+    void parse_Document (rj::Document& document, const char* json) {
+        document.Parse(json);
+
+        if(!document.IsArray())
+            parse_Object(document);
+
+        for (auto &member: document.GetArray()) {
+            if (member.IsObject())
+                parse_Object(member);
+        }
+    }
+    }
+
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
 std::vector<char> file_Buffer (fs::path& path) {
     //Open the file.
     std::ifstream stream {path.string()};
@@ -86,6 +123,7 @@ std::vector<char> file_Buffer (fs::path& path) {
     return buff;
 }
 
+/*--------------------------------------------------------------------------------------------------------------------*/
 cpr::Response put_Request(std::vector<char>& buff, fs::path& path) {
     fs::path file_Name = path.filename();
 
@@ -107,6 +145,7 @@ cpr::Response put_Request(std::vector<char>& buff, fs::path& path) {
 
     return response;
 }
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 // Look for any string included in the vector.
 bool subStr_Found (std::vector<std::string>& keys, std::string& to_Find) {
@@ -114,12 +153,10 @@ bool subStr_Found (std::vector<std::string>& keys, std::string& to_Find) {
         return (to_Find.find(key) != std::string::npos);
     });
 
-    return found;
-
     /*  Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
         This set also includes the Dublin Core properties.
         Removed properties that can be stored in the flat file for later. */
-    std::vector<std::string> core_Keys{
+    std::vector<std::string> core_Keys {
             "ALTITUDE", "COMMENTS", "CONTRIBUTOR", "COVERAGE", "CREATED", "CREATOR", "CREATOR_TOOL", "DATE", "DC:",
             "DC.", "DC_", "DCTERMS:", "DCTM:", "DESCRIPTION", "EMBEDDED_RELATIONSHIP_ID", "EMBEDDED_RESOURCE_PATH",
             "EMBEDDED_RESOURCE_TYPE", "HAS_SIGNATURE", "IDENTIFIER", "LANGUAGE", "LATITUDE", "LONGITUDE",
@@ -129,79 +166,13 @@ bool subStr_Found (std::vector<std::string>& keys, std::string& to_Find) {
             // Matched many keys with these substrings. Should return with the "dc" prefix. Removed "FORMAT", "TYPE".
     };
 
-    std::vector<std::string> ignore{"UNKNOWN"};
-}
-    
+    std::vector<std::string> ignore {"UNKNOWN"};
 
-void prettier_Printer(rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>> &key) {
-    std::cout << key.name.GetString() << ": ";
-
-    if (key.value.IsArray()) {
-        // Subtract 1 to remove comma from printing after last value in array.
-        unsigned int array_Size = key.value.Size() - 1;
-        std::cout  << "[ ";
-
-        for (auto& value : key.value.GetArray()) {
-            std::cout << value.GetString();
-
-            if (array_Size > 0) {
-                --array_Size;
-                std::cout << ", ";
-            }
-        }
-        std::cout  << " ]\n";
-    } else {
-        std::cout << key.value.GetString() << '\n';
-    }
-}
-
-void parse_Object(rj::GenericValue<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>>& member) {
-    if (!member.IsObject()) {
-        std::cout << "JSON is not an object. Failed to parse. Type is: " << strerror(member.GetType());
-    }
-
-    for (auto &key: member.GetObject()) {
-
-        std::string key_Name = key.name.GetString();
-
-//        if (key_Name == "X-TIKA:content")
-//            continue;
-
-//        prettier_Printer(key);
-    }
-}
-
-void parse_Document (rj::Document& document, const char* json) {
-    document.Parse(json);
-
-    if(!document.IsArray())
-        parse_Object(document);
-
-    for (auto &member: document.GetArray()) {
-        if (member.IsObject())
-            parse_Object(member);
-    }
-}
-
-void ParseMessage(cpr::Response& response) {
-    MyHandler handler;
-    rj::Reader reader;
-    std::string json {response.text};
-    rj::StringStream stream(json.c_str());
-
-    reader.IterativeParseInit();
-    while (!reader.IterativeParseComplete()) {
-        reader.IterativeParseNext<rj::kParseDefaultFlags>(stream, handler);
-    }
+    return found;
 
 }
 
-void parse_Helper(fs::path& path) {
-    std::vector<char> buff {file_Buffer(path)};
-    cpr::Response response {put_Request(buff, path)};
-
-    ParseMessage(response);
-}
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 int main(int argc,char* argv[]) {
     //If a path is not passed via CLI.
@@ -223,7 +194,6 @@ int main(int argc,char* argv[]) {
                     << "code().message(): " << fs_error.code().message() << "\n"
                     << "code().category():" << fs_error.code().category().name() << "\n";
         }
-        parse_Helper(path);
     }
     return 0;
 }
