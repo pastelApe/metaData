@@ -1,61 +1,73 @@
+//STL
 #include <filesystem>
-#include <initializer_list>
 #include <iostream>
-#include <variant>
 #include <vector>
-#include <set>
+#include <map>
 
+//Boost
+#include "boost/variant.hpp"
+
+//C++ Requests: Curl for People
 #include <cpr/cpr.h>
 
+//RapidJson
 #include "rapidjson/document.h"
-#include "rapidjson/reader.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
 #include "rapidjson/error/en.h"
+#include "rapidjson/reader.h"
+#include "rapidjson/stringbuffer.h"
 
 namespace  fs = std::filesystem;
 namespace  rj = rapidjson;
 
-//TODO Use boost with recursive_wrapper. Create a Namespace, Create a struct. Use a visitor on it. Hope there is docs of this...
+typedef boost::make_recursive_variant<
+        bool,
+        int64_t,
+        uint64_t,
+        double,
+        std::string,
+        std::vector<boost::recursive_variant_>,
+                std::map<std::string, boost::recursive_variant_>
+                        >::type variant_type;
 
-typedef std::vector<std::variant<bool, long long int, unsigned long long int, double, std::string>> v_Vector;
-typedef std::variant<bool, long long int, unsigned long long int, double, std::string, v_Vector> v_Variant;
 
-
-std::vector<std::string> file_Content;
-
-std::map<std::string, rj::Value> MessageMap;
-
-std::string key;
-rj::Value value;
-
-//TODO private property
-//TODO function prop that returns std::move(private prop)
-
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "HideNonVirtualFunction"
-
-struct MyHandler : public BaseReaderHandler<UTF8<>, MyHandler> {
-    bool Null() { cout << "Null()" << endl; return true; }
-    bool Bool(bool b) { cout << "Bool(" << boolalpha << b << ")" << endl; return true; }
-    bool Int(int i) { cout << "Int(" << i << ")" << endl; return true; }
-    bool Uint(unsigned u) { cout << "Uint(" << u << ")" << endl; return true; }
-    bool Int64(int64_t i) { cout << "Int64(" << i << ")" << endl; return true; }
-    bool Uint64(uint64_t u) { cout << "Uint64(" << u << ")" << endl; return true; }
-    bool Double(double d) { cout << "Double(" << d << ")" << endl; return true; }
-    bool String(const char* str, SizeType length, bool copy) { 
-        cout << "String(" << str << ", " << length << ", " << boolalpha << copy << ")" << endl;
-        return true;
-    }
-    bool StartObject() { cout << "StartObject()" << endl; return true; }
-    bool Key(const char* str, SizeType length, bool copy) { 
-        cout << "Key(" << str << ", " << length << ", " << boolalpha << copy << ")" << endl;
-        return true;
-    }
-    bool EndObject(SizeType memberCount) { cout << "EndObject(" << memberCount << ")" << endl; return true; }
-    bool StartArray() { cout << "StartArray()" << endl; return true; }
-    bool EndArray(SizeType elementCount) { cout << "EndArray(" << elementCount << ")" << endl; return true; }
+class meta_value {
+private:
+    std::vector<variant_type> _props;
+public:
+    std::vector<variant_type> get_value(variant_type& v) {_props.emplace_back(std::move(v)); return _props;}
 };
+
+
+struct MyHandler : public rj::BaseReaderHandler<rj::UTF8<>, MyHandler> {
+    variant_type prop {};
+    
+    bool Null() { return true; }
+    bool Bool(bool b) { prop = b; return true; }
+    bool Int(int i) { prop = static_cast<int64_t> (i); return true; }
+    bool Uint(unsigned u) { prop = static_cast<uint64_t> (u);  return true; }
+    bool Int64(int64_t i64) { prop = static_cast<int64_t> (i64) return true; }
+    bool Uint64(uint64_t u64) { prop = static_cast<unt64_t> (u64) ; return true; }
+    bool Double(double d) { prop = d; return true; }
+    bool String(const char* str, rj::SizeType length, bool copy) { prop = std::string(str, length) ; return true;
+    }
+    bool StartObject() { return true; }
+    bool Key(const char* str, rj::SizeType length, bool copy) { prop = std::string(str, length); return true;
+    }
+    bool EndObject(rj::SizeType memberCount) { return true; }
+    bool StartArray() { return true; }
+    bool EndArray(rj::SizeType elementCount) { return true; }
+};
+
+
+variant_type type_handler(const auto& value ) {
+    std::map<std:string, variant_type> meta {};
+    if (value.IsObject()) {
+        for (const auto& [key, val] : value) {
+
+    }
+}
+
+/*--------------------------------------
 
 std::vector<char> file_Buffer (fs::path& path) {
     //Open the file.
@@ -103,42 +115,23 @@ bool subStr_Found (std::vector<std::string>& keys, std::string& to_Find) {
     });
 
     return found;
-}
-
-void create_Maps (rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>> &key) {
-    std::string key_Name = key.name.GetString();
-    v_Variant value;
-    // Determine the value type
-    if (key.value.GetType() == rj::kObjectType) {
-        type_Handler(key);
-    }
-
-    //Make case-insensitive for comparison.
-    std::string upper_Name = key_Name;
-    std::transform(upper_Name.begin(), upper_Name.end(), upper_Name.begin(), ::toupper);
 
     /*  Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
         This set also includes the Dublin Core properties.
         Removed properties that can be stored in the flat file for later. */
-    std::vector<std::string> core_Keys {
+    std::vector<std::string> core_Keys{
             "ALTITUDE", "COMMENTS", "CONTRIBUTOR", "COVERAGE", "CREATED", "CREATOR", "CREATOR_TOOL", "DATE", "DC:",
             "DC.", "DC_", "DCTERMS:", "DCTM:", "DESCRIPTION", "EMBEDDED_RELATIONSHIP_ID", "EMBEDDED_RESOURCE_PATH",
             "EMBEDDED_RESOURCE_TYPE", "HAS_SIGNATURE", "IDENTIFIER", "LANGUAGE", "LATITUDE", "LONGITUDE",
             "METADATA_DATE", "MODIFIED", "MODIFIER", "ORIGINAL_RESOURCE_NAME", "PRINT_DATE", "PROTECTED", "PUBLISHER",
-            "RATING", "RELATION", "RESOURCE_NAME_KEY", "REVISION", "RIGHTS", "SOURCE", "SOURCE_PATH", "SUBJECT", "TITLE",
+            "RATING", "RELATION", "RESOURCE_NAME_KEY", "REVISION", "RIGHTS", "SOURCE", "SOURCE_PATH", "SUBJECT",
+            "TITLE",
             // Matched many keys with these substrings. Should return with the "dc" prefix. Removed "FORMAT", "TYPE".
     };
 
-    std::vector<std::string> ignore {"UNKNOWN"};
-
-    if (subStr_Found(ignore, upper_Name)) {
-        //Do nothing.
-    } else if (subStr_Found(core_Keys, upper_Name)) {
-        core_Map.emplace(key_Name, );
-    } else {
-        remaining_Keys.emplace(key_Name);
-    }
+    std::vector<std::string> ignore{"UNKNOWN"};
 }
+    
 
 void prettier_Printer(rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>> &key) {
     std::cout << key.name.GetString() << ": ";
@@ -162,48 +155,12 @@ void prettier_Printer(rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<
     }
 }
 
-
-//TODO Type Handler Function. Recursive check on each item in an array and check val in objects. Return the property from the handler struct.
-
-//TODO Parse the document. CHeck for errors
-
-auto process_doc(const rj::Document& doc) {
-    std::map<std::string, VARIANT_PROP> props;
-    
-    if (doc.HasParseError()) {
-        //TODO figure out if I can use std::cout here
-        fprintf(stderr,"Error (offset) %u): %s",
-                (unsigned)doc.GetErrorOffset(),
-                rj::GetParseError_En(doc.GetParseError()));
-        std::cout << std::endl;
-    }
-    
-    //TODO if array, else object. return props
-}
-
-//TODO Use the ktypes to detect json docs type for error handling somewhere. 
-//TODO test against content-type: application/octet-stream (cpr)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void parse_Object(rj::GenericValue<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>>& member) {
     if (!member.IsObject()) {
         std::cout << "JSON is not an object. Failed to parse. Type is: " << strerror(member.GetType());
     }
 
     for (auto &key: member.GetObject()) {
-        create_Maps(key);
 
         std::string key_Name = key.name.GetString();
 
@@ -266,9 +223,7 @@ int main(int argc,char* argv[]) {
                     << "code().message(): " << fs_error.code().message() << "\n"
                     << "code().category():" << fs_error.code().category().name() << "\n";
         }
+        parse_Helper(path);
     }
-
-    parse_Helper(path);
-
     return 0;
 }
