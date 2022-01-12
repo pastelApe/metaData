@@ -36,11 +36,11 @@ typedef boost::make_recursive_variant<
 
 struct Type_Handler : public rj::BaseReaderHandler<rj::UTF8<>, Type_Handler> {
 private:
-    std::vector<variant_type> _props;
+   variant_type _props;
 public:
-    std::vector<variant_type> get_value(auto& val) {_props.emplace_back(std::move(val)); return _props;}
-    variant_type type {};
-
+    std::vector<variant_type>&& get_value() {return std::move(_prop)); }
+ 
+//TODO Change tyoe to _props
     bool Null() { return true; }
     bool Bool(bool b) { type = b; return true; }
     bool Int(int i) { type = static_cast<int64_t> (i); return true; }
@@ -58,22 +58,28 @@ public:
     bool EndArray(rj::SizeType elementCount) { return true; }
 };
 
-variant_type value_parser(rj::GenericValue<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>>& value) {
-    Type_Handler handler;
+variant_type value_handler(Type_Handler(const rj::Value& value) {
     if(value.IsObject()) {
-        for (auto& sub : value.GetObject()) {
-            sub.value.Accept(handler);
-            return ;
-    } else if (value.IsArray()){
-        for (auto &sub_value: value.GetArray()) {
-            value_parser(sub_value);
+        std::map<std::string, variant_type> map;
+        for (const auto& [obj_key, obj_value] : value.GetObject()) {
+            map.emplace(obj_key.GetString(), value_handler(obj_value);
         }
+    } else if (value.IsArray()) {
+        std::vector<variant_type> vec;    
+        for (const auto& arr_value: value.GetArray()) {
+            vec.push_back(value_handler(arr_value);
+        }
+    } else {
+        Type_Handler val_type;
+        value.Accept(val_type);
+        
+        return val_type.get_value();
     }
 }
 
-std::map<std::string ,variant_type> process_doc (rj::Document& doc, const char* json) {
+auto process_doc (rj::Document& doc, const char* json) {
     doc.Parse(json);
-    std::map<std::string ,variant_type> meta_data {};
+    std::map<std::string ,variant_type> meta_data;
 
     if (!doc.IsObject()) {
         std::cout << "JSON is not an object. Failed to parse. Type is: " << strerror(doc.GetType());
