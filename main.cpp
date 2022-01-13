@@ -80,35 +80,26 @@ variant_type value_handler(Type_Handler(const rj::Value& value) {
 auto process_doc (rj::Document& doc, const char* json) {
     doc.Parse(json);
     std::map<std::string ,variant_type> meta_data;
-
-    if (!doc.IsObject()) {
-        std::cout << "JSON is not an object. Failed to parse. Type is: " << strerror(doc.GetType());
-    } else {
-        for (auto& [key, value] : doc.GetObject()) {
-            variant_type prop = value_helper(value);
-
-
-
-//        if (key_Name == "X-TIKA:content")
-//            continue;
-
-//        prettier_Printer(key);
+    
+    if (doc.HasParseError()) {
+        fprintf(stderr, "Error (offset %u): %s", (unsigned)doc.GetErrorOffset(), rj::GetParseError_En(doc.GetParseError()));
+        std::cout << std::endl;
+    }
+    
+    if (doc.IsArray()) {
+        for (const auto& prop : doc.GetArray()) {
+            if (prop.IsObject()) {
+                for (const auto& [key, val] : prop.GetObject()) {
+                    meta_data.emplace(key.GetString, value_handler(val));
+                }
+            }
         }
+    } else if (doc.IsObject()) {
+       for (auto& [key, val] : prop.GetObject()) {
+           meta_data.emplace(key.GetString, value_handler(val));
+       }
     }
-
-    void parse_Document (rj::Document& document, const char* json) {
-        document.Parse(json);
-
-        if(!document.IsArray())
-            parse_Object(document);
-
-        for (auto &member: document.GetArray()) {
-            if (member.IsObject())
-                parse_Object(member);
-        }
-    }
-    }
-
+    return meta_data;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -152,32 +143,34 @@ cpr::Response put_Request(std::vector<char>& buff, fs::path& path) {
     return response;
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
+/*  Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
+    This set also includes the Dublin Core properties.
+    Removed properties that can be stored in the flat file for later. */
+std::vector<std::string> core_Keys {
+        "ALTITUDE", "COMMENTS", "CONTRIBUTOR", "COVERAGE", "CREATED", "CREATOR", "CREATOR_TOOL", "DATE", "DC:",
+        "DC.", "DC_", "DCTERMS:", "DCTM:", "DESCRIPTION", "EMBEDDED_RELATIONSHIP_ID", "EMBEDDED_RESOURCE_PATH",
+        "EMBEDDED_RESOURCE_TYPE", "HAS_SIGNATURE", "IDENTIFIER", "LANGUAGE", "LATITUDE", "LONGITUDE",
+        "METADATA_DATE", "MODIFIED", "MODIFIER", "ORIGINAL_RESOURCE_NAME", "PRINT_DATE", "PROTECTED", "PUBLISHER",
+        "RATING", "RELATION", "RESOURCE_NAME_KEY", "REVISION", "RIGHTS", "SOURCE", "SOURCE_PATH", "SUBJECT",
+        "TITLE",
+        // Matched many keys with these substrings. Should return with the "dc" prefix. Removed "FORMAT", "TYPE".
+};
+                          
+std::vector<std::string> ignore {"UNKNOWN"};
 
-// Look for any string included in the vector.
-bool subStr_Found (std::vector<std::string>& keys, std::string& to_Find) {
+bool key_found (std::vector<std::string>& keys,
+            rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>>& to_find) {
+    //Make case-insensitive for comparison.
+    std::string key_name = to_find.name.GetString();
+    std::transform(key_name.begin(), key_name.end(), key_name.begin(), ::toupper);
+    
     bool found = std::any_of(keys.begin(), keys.end(), [&](auto key) {
-        return (to_Find.find(key) != std::string::npos);
+        return (key_name.find(key) != std::string::npos);
     });
-
-    /*  Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
-        This set also includes the Dublin Core properties.
-        Removed properties that can be stored in the flat file for later. */
-    std::vector<std::string> core_Keys {
-            "ALTITUDE", "COMMENTS", "CONTRIBUTOR", "COVERAGE", "CREATED", "CREATOR", "CREATOR_TOOL", "DATE", "DC:",
-            "DC.", "DC_", "DCTERMS:", "DCTM:", "DESCRIPTION", "EMBEDDED_RELATIONSHIP_ID", "EMBEDDED_RESOURCE_PATH",
-            "EMBEDDED_RESOURCE_TYPE", "HAS_SIGNATURE", "IDENTIFIER", "LANGUAGE", "LATITUDE", "LONGITUDE",
-            "METADATA_DATE", "MODIFIED", "MODIFIER", "ORIGINAL_RESOURCE_NAME", "PRINT_DATE", "PROTECTED", "PUBLISHER",
-            "RATING", "RELATION", "RESOURCE_NAME_KEY", "REVISION", "RIGHTS", "SOURCE", "SOURCE_PATH", "SUBJECT",
-            "TITLE",
-            // Matched many keys with these substrings. Should return with the "dc" prefix. Removed "FORMAT", "TYPE".
-    };
-
-    std::vector<std::string> ignore {"UNKNOWN"};
-
+    
     return found;
-
 }
-
+                          
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 int main(int argc,char* argv[]) {
