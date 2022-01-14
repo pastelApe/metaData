@@ -23,10 +23,8 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="Working on string comparison. Saving progress.">
-      <change afterPath="$PROJECT_DIR$/tikaNotes.txt" afterDir="false" />
+    <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="Variant property works. Printer function prints key. TODO: print value.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -185,7 +183,7 @@
       <workItem from="1639512599004" duration="16277000" />
       <workItem from="1641926704350" duration="17046000" />
       <workItem from="1642180479876" duration="899000" />
-      <workItem from="1642181466054" duration="3662000" />
+      <workItem from="1642181466054" duration="9471000" />
     </task>
     <task id="LOCAL-00001" summary="Working on string comparison. Saving progress.">
       <created>1642180676848</created>
@@ -194,7 +192,14 @@
       <option name="project" value="LOCAL" />
       <updated>1642180676848</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Variant property works. Printer function prints key. TODO: print value.">
+      <created>1642195236841</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1642195236841</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -217,7 +222,8 @@
       <path value="$PROJECT_DIR$/cmake-build-debug/_deps/zlib-src" />
     </ignored-roots>
     <MESSAGE value="Working on string comparison. Saving progress." />
-    <option name="LAST_COMMIT_MESSAGE" value="Working on string comparison. Saving progress." />
+    <MESSAGE value="Variant property works. Printer function prints key. TODO: print value." />
+    <option name="LAST_COMMIT_MESSAGE" value="Variant property works. Printer function prints key. TODO: print value." />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

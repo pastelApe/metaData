@@ -58,6 +58,59 @@ public:
     bool EndArray(rj::SizeType elementCount) { return true; }
 };
 
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+bool key_found (std::vector<std::string>& keys, const std::string& to_find) {
+    //Make case-insensitive for comparison.
+    std::string u_key {to_find};
+    std::transform(u_key.begin(), u_key.end(), u_key.begin(), ::toupper);
+
+    bool found = std::any_of(keys.begin(), keys.end(), [&](auto key) {
+        return (u_key.find(key) != std::string::npos);
+    });
+
+    return found;
+}
+std::string print_value(const rj::Value& val) {
+    Type_Handler val_type;
+    val.Accept(val_type);
+
+    std::string value{};
+
+    switch (val.GetType()) {
+        case rj::kNullType :
+            return value = "Null";
+            break;
+        case rj::kFalseType :
+            return value = "False";
+            break;
+        case rj::kTrueType :
+            return value = "True";
+            break;
+        case rj::kNumberType :
+            return value = "Number";
+            break;
+        case rj::kStringType :
+            return value = val.GetString();
+        case rj::kArrayType :
+            return value = "Array";
+            break;
+        case rj::kObjectType :
+            return value = "Object";
+            break;
+    }
+}
+
+//void printer(std::map<std::string, variant_type>& meta_data, std::vector<std::string>& keys) {
+//    for (const auto &prop: meta_data) {
+//        if (key_found(keys, prop.first)) {
+//            std::cout << prop.first << ": " << std::endl;
+//        }
+//    }
+//}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "misc-no-recursion"
 
@@ -67,17 +120,25 @@ variant_type value_handler(const rj::Value& val) {
         std::map<std::string, variant_type> map;
         for (const auto& [obj_key, obj_val] : val.GetObject()) {
             map.emplace(obj_key.GetString(), value_handler(obj_val));
+
+            std::cout << obj_key.GetString() << ": " << print_value(obj_val) << std::endl;
         }
         return map;
     } else if (val.IsArray()) {
         std::vector<variant_type> vec;
+        std::cout << "[ ";
         for (const auto& arr_value: val.GetArray()) {
             vec.push_back(value_handler(arr_value));
+            std::cout << print_value(arr_value);
         }
+        std::cout << " ]" << std::endl;
+
         return vec;
     } else {
         Type_Handler val_type;
         val.Accept(val_type);
+
+        std::cout << print_value(val) << std::endl;
 
         return val_type.get_value();
     }
@@ -99,12 +160,15 @@ auto process_doc (rj::Document& doc, const char* json) {
         for (const auto& prop : doc.GetArray()) {
             if (prop.IsObject()) {
                 for (const auto& [key, val] : prop.GetObject()) {
+                    std::cout << key.GetString() << ": ";
                     meta_data.emplace(key.GetString(), value_handler(val));
+
                 }
             }
         }
     } else if (doc.IsObject()) {
         for (auto& [key, val] : doc.GetObject()) {
+            std::cout << key.GetString() << ": ";
             meta_data.emplace(key.GetString(), value_handler(val));
         }
     }
@@ -164,31 +228,6 @@ auto file_handler(auto& path) {
 
     return meta_data;
 }
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-bool key_found (std::vector<std::string>& keys, const std::string& to_find) {
-    //Make case-insensitive for comparison.
-    std::string u_key {to_find};
-    std::transform(u_key.begin(), u_key.end(), u_key.begin(), ::toupper);
-
-    bool found = std::any_of(keys.begin(), keys.end(), [&](auto key) {
-        return (u_key.find(key) != std::string::npos);
-    });
-
-    return found;
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-
-void printer(std::map<std::string, variant_type>& meta_data, std::vector<std::string>& keys) {
-    for (const auto &prop: meta_data) {
-        if (key_found(keys, prop.first)) {
-            std::cout << prop.first << std::endl;
-
-        }
-    }
-}
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
@@ -233,12 +272,12 @@ int main(int argc,char* argv[]) {
             for (const auto &dir_entry: fs::recursive_directory_iterator(path)) {
                 fs::path d_path {dir_entry};
                 auto meta_data{file_handler(d_path)};
-
-                printer(meta_data, core_Keys);
+//
+//                printer(meta_data, core_Keys);
             }
         } else {
             auto meta_data {file_handler(path)};
-            printer(meta_data, core_Keys);
+//            printer(meta_data, core_Keys);
         }
     }
 
