@@ -112,7 +112,8 @@ auto process_doc (rj::Document& doc, const char* json) {
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
-std::vector<char> file_Buffer (fs::path& path) {
+
+std::vector<char> file_Buffer (auto& path) {
     //Open the file.
     std::ifstream stream {path.string()};
 
@@ -130,7 +131,8 @@ std::vector<char> file_Buffer (fs::path& path) {
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
-cpr::Response put_Request(std::vector<char>& buff, fs::path& path) {
+
+cpr::Response put_Request(std::vector<char>& buff, auto& path) {
     fs::path file_Name = path.filename();
 
     auto url {cpr::Url{"http://localhost:9998/rmeta/form/text"}};
@@ -153,6 +155,16 @@ cpr::Response put_Request(std::vector<char>& buff, fs::path& path) {
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+auto file_handler(auto& path) {
+    std::vector<char> buff {file_Buffer(path)};
+    std::string response {put_Request(buff, path).text};
+    rj::Document doc;
+
+    auto meta_data {process_doc(doc, response.c_str())};
+
+    return meta_data;
+}
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 bool key_found (std::vector<std::string>& keys, const std::string& to_find) {
     //Make case-insensitive for comparison.
@@ -164,6 +176,18 @@ bool key_found (std::vector<std::string>& keys, const std::string& to_find) {
     });
 
     return found;
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+
+void printer(std::map<std::string, variant_type>& meta_data, std::vector<std::string>& keys) {
+    for (const auto &prop: meta_data) {
+        if (key_found(keys, prop.first)) {
+            std::cout << prop.first << std::endl;
+
+        }
+    }
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -189,35 +213,33 @@ int main(int argc,char* argv[]) {
                     << "code().category():" << fs_error.code().category().name() << "\n";
         }
 
-        std::vector<char> buff {file_Buffer(path)};
-        std::string response {put_Request(buff, path).text};
-
-        rj::Document doc;
-        auto meta_data {process_doc(doc, response.c_str())};
-
-
 //          Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
 //          This set also includes the Dublin Core properties.
 //          Removed properties that can be stored in the flat file for later.
-        std::vector<std::string> core_Keys {
+        std::vector<std::string> core_Keys{
                 "ALTITUDE", "COMMENTS", "CONTRIBUTOR", "COVERAGE", "CREATED", "CREATOR", "CREATOR_TOOL", "DATE", "DC:",
                 "DC.", "DC_", "DCTERMS:", "DCTM:", "DESCRIPTION", "EMBEDDED_RELATIONSHIP_ID", "EMBEDDED_RESOURCE_PATH",
                 "EMBEDDED_RESOURCE_TYPE", "HAS_SIGNATURE", "IDENTIFIER", "LANGUAGE", "LATITUDE", "LONGITUDE",
-                "METADATA_DATE", "MODIFIED", "MODIFIER", "ORIGINAL_RESOURCE_NAME", "PRINT_DATE", "PROTECTED", "PUBLISHER",
+                "METADATA_DATE", "MODIFIED", "MODIFIER", "ORIGINAL_RESOURCE_NAME", "PRINT_DATE", "PROTECTED",
+                "PUBLISHER",
                 "RATING", "RELATION", "RESOURCE_NAME_KEY", "REVISION", "RIGHTS", "SOURCE", "SOURCE_PATH", "SUBJECT",
                 "TITLE",
                 // Matched many keys with these substrings. Should return with the "dc" prefix. Removed "FORMAT", "TYPE".
         };
 
-        std::vector<std::string> ignore {"UNKNOWN"};
+        std::vector<std::string> ignore{"UNKNOWN"};
 
-        for (const auto& prop : meta_data) {
-            if (key_found(core_Keys, prop.first)){
-                std::cout << prop.first << std::endl;
+        if (is_directory(path)) {
+            for (const auto &dir_entry: fs::recursive_directory_iterator(path)) {
+                fs::path d_path {dir_entry};
+                auto meta_data{file_handler(d_path)};
+
+                printer(meta_data, core_Keys);
             }
-
+        } else {
+            auto meta_data {file_handler(path)};
+            printer(meta_data, core_Keys);
         }
-
     }
 
     return 0;

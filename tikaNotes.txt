@@ -1,0 +1,8 @@
+Tika
+
+- To extract pdf content use XHTML rather that plain text. Split on the page divs.
+- Do we want deleted text from docs?
+- Turn off extraction of deleted text with “OfficeParserConfig#setIncludeDeletedContent”. Does not work for docx.
+- Check status of server against lightweight endpoint /status.
+- Look into Tika Pipes.
+- Client code needs to be able to handle the times when tika-server is restarting and is not available

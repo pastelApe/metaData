@@ -15,5 +15,5 @@ FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git GIT_TA
 FetchContent_MakeAvailable(cpr)
 target_link_libraries(metaData PRIVATE cpr::cpr)
 
-include_directories(/Users/xawatso/Documents/Projects/src/boost)
+include_directories(/Users/xawatso/workspace/projects/src/boost)
 include_directories("/usr/local/include")
