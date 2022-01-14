@@ -30,74 +30,83 @@ typedef boost::make_recursive_variant<
         double,
         std::string,
         std::vector<boost::recursive_variant_>,
-        std::map<std::string, boost::recursive_variant_>>::type variant_type;
+std::map<std::string, boost::recursive_variant_>>::type variant_type;
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 struct Type_Handler : public rj::BaseReaderHandler<rj::UTF8<>, Type_Handler> {
 private:
-   variant_type _props;
+    variant_type _props;
 public:
-    std::vector<variant_type>&& get_value() {return std::move(_prop)); }
- 
-//TODO Change tyoe to _props
+    variant_type&& get_value() {return std::move(_props); }
+
+
     bool Null() { return true; }
-    bool Bool(bool b) { type = b; return true; }
-    bool Int(int i) { type = static_cast<int64_t> (i); return true; }
-    bool Uint(unsigned u) { type = static_cast<uint64_t> (u);  return true; }
-    bool Int64(int64_t i64) { type = static_cast<int64_t> (i64) return true; }
-    bool Uint64(uint64_t u64) { type = static_cast<uint64_t> (u64) ; return true; }
-    bool Double(double d) { type = d; return true; }
-    bool String(const char* str, rj::SizeType length, bool copy) { type = std::string(str, length) ; return true;
+    bool Bool(bool b) { _props = b; return true; }
+    bool Int(int i) { _props = static_cast<int64_t> (i); return true; }
+    bool Uint(unsigned u) { _props = static_cast<uint64_t> (u);  return true; }
+    bool Int64(int64_t i64) { _props = static_cast<int64_t> (i64); return true; }
+    bool Uint64(uint64_t u64) { _props = static_cast<uint64_t> (u64) ; return true; }
+    bool Double(double d) { _props = d; return true; }
+    bool String(const char* str, rj::SizeType length, bool copy) { _props = std::string(str, length) ; return true;
     }
     bool StartObject() { return true; }
-    bool Key(const char* str, rj::SizeType length, bool copy) { type = std::string(str, length); return true;
+    bool Key(const char* str, rj::SizeType length, bool copy) { _props = std::string(str, length); return true;
     }
     bool EndObject(rj::SizeType memberCount) { return true; }
     bool StartArray() { return true; }
     bool EndArray(rj::SizeType elementCount) { return true; }
 };
 
-variant_type value_handler(Type_Handler(const rj::Value& value) {
-    if(value.IsObject()) {
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "misc-no-recursion"
+
+//value_handler is a recursive function. Checks all values for child objects or arrays.
+variant_type value_handler(const rj::Value& val) {
+    if (val.IsObject()) {
         std::map<std::string, variant_type> map;
-        for (const auto& [obj_key, obj_value] : value.GetObject()) {
-            map.emplace(obj_key.GetString(), value_handler(obj_value);
+        for (const auto& [obj_key, obj_val] : val.GetObject()) {
+            map.emplace(obj_key.GetString(), value_handler(obj_val));
         }
-    } else if (value.IsArray()) {
-        std::vector<variant_type> vec;    
-        for (const auto& arr_value: value.GetArray()) {
-            vec.push_back(value_handler(arr_value);
+        return map;
+    } else if (val.IsArray()) {
+        std::vector<variant_type> vec;
+        for (const auto& arr_value: val.GetArray()) {
+            vec.push_back(value_handler(arr_value));
         }
+        return vec;
     } else {
         Type_Handler val_type;
-        value.Accept(val_type);
-        
+        val.Accept(val_type);
+
         return val_type.get_value();
     }
 }
 
+
 auto process_doc (rj::Document& doc, const char* json) {
     doc.Parse(json);
     std::map<std::string ,variant_type> meta_data;
-    
+
     if (doc.HasParseError()) {
-        fprintf(stderr, "Error (offset %u): %s", (unsigned)doc.GetErrorOffset(), rj::GetParseError_En(doc.GetParseError()));
+        fprintf(stderr, "Error (offset %u): %s",
+                (unsigned)doc.GetErrorOffset(),
+                rj::GetParseError_En(doc.GetParseError()));
         std::cout << std::endl;
     }
-    
+
     if (doc.IsArray()) {
         for (const auto& prop : doc.GetArray()) {
             if (prop.IsObject()) {
                 for (const auto& [key, val] : prop.GetObject()) {
-                    meta_data.emplace(key.GetString, value_handler(val));
+                    meta_data.emplace(key.GetString(), value_handler(val));
                 }
             }
         }
     } else if (doc.IsObject()) {
-       for (auto& [key, val] : prop.GetObject()) {
-           meta_data.emplace(key.GetString, value_handler(val));
-       }
+        for (auto& [key, val] : doc.GetObject()) {
+            meta_data.emplace(key.GetString(), value_handler(val));
+        }
     }
     return meta_data;
 }
@@ -143,34 +152,20 @@ cpr::Response put_Request(std::vector<char>& buff, fs::path& path) {
     return response;
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
-/*  Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
-    This set also includes the Dublin Core properties.
-    Removed properties that can be stored in the flat file for later. */
-std::vector<std::string> core_Keys {
-        "ALTITUDE", "COMMENTS", "CONTRIBUTOR", "COVERAGE", "CREATED", "CREATOR", "CREATOR_TOOL", "DATE", "DC:",
-        "DC.", "DC_", "DCTERMS:", "DCTM:", "DESCRIPTION", "EMBEDDED_RELATIONSHIP_ID", "EMBEDDED_RESOURCE_PATH",
-        "EMBEDDED_RESOURCE_TYPE", "HAS_SIGNATURE", "IDENTIFIER", "LANGUAGE", "LATITUDE", "LONGITUDE",
-        "METADATA_DATE", "MODIFIED", "MODIFIER", "ORIGINAL_RESOURCE_NAME", "PRINT_DATE", "PROTECTED", "PUBLISHER",
-        "RATING", "RELATION", "RESOURCE_NAME_KEY", "REVISION", "RIGHTS", "SOURCE", "SOURCE_PATH", "SUBJECT",
-        "TITLE",
-        // Matched many keys with these substrings. Should return with the "dc" prefix. Removed "FORMAT", "TYPE".
-};
-                          
-std::vector<std::string> ignore {"UNKNOWN"};
 
-bool key_found (std::vector<std::string>& keys,
-            rj::GenericMember<rj::UTF8<char>, rj::MemoryPoolAllocator<rj::CrtAllocator>>& to_find) {
+
+bool key_found (std::vector<std::string>& keys, const std::string& to_find) {
     //Make case-insensitive for comparison.
-    std::string key_name = to_find.name.GetString();
-    std::transform(key_name.begin(), key_name.end(), key_name.begin(), ::toupper);
-    
+    std::string u_key {to_find};
+    std::transform(u_key.begin(), u_key.end(), u_key.begin(), ::toupper);
+
     bool found = std::any_of(keys.begin(), keys.end(), [&](auto key) {
-        return (key_name.find(key) != std::string::npos);
+        return (u_key.find(key) != std::string::npos);
     });
-    
+
     return found;
 }
-                          
+
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 int main(int argc,char* argv[]) {
@@ -193,6 +188,37 @@ int main(int argc,char* argv[]) {
                     << "code().message(): " << fs_error.code().message() << "\n"
                     << "code().category():" << fs_error.code().category().name() << "\n";
         }
+
+        std::vector<char> buff {file_Buffer(path)};
+        std::string response {put_Request(buff, path).text};
+
+        rj::Document doc;
+        auto meta_data {process_doc(doc, response.c_str())};
+
+
+//          Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
+//          This set also includes the Dublin Core properties.
+//          Removed properties that can be stored in the flat file for later.
+        std::vector<std::string> core_Keys {
+                "ALTITUDE", "COMMENTS", "CONTRIBUTOR", "COVERAGE", "CREATED", "CREATOR", "CREATOR_TOOL", "DATE", "DC:",
+                "DC.", "DC_", "DCTERMS:", "DCTM:", "DESCRIPTION", "EMBEDDED_RELATIONSHIP_ID", "EMBEDDED_RESOURCE_PATH",
+                "EMBEDDED_RESOURCE_TYPE", "HAS_SIGNATURE", "IDENTIFIER", "LANGUAGE", "LATITUDE", "LONGITUDE",
+                "METADATA_DATE", "MODIFIED", "MODIFIER", "ORIGINAL_RESOURCE_NAME", "PRINT_DATE", "PROTECTED", "PUBLISHER",
+                "RATING", "RELATION", "RESOURCE_NAME_KEY", "REVISION", "RIGHTS", "SOURCE", "SOURCE_PATH", "SUBJECT",
+                "TITLE",
+                // Matched many keys with these substrings. Should return with the "dc" prefix. Removed "FORMAT", "TYPE".
+        };
+
+        std::vector<std::string> ignore {"UNKNOWN"};
+
+        for (const auto& prop : meta_data) {
+            if (key_found(core_Keys, prop.first)){
+                std::cout << prop.first << std::endl;
+            }
+
+        }
+
     }
+
     return 0;
 }
