@@ -48,7 +48,7 @@ public:
     bool Int64(int64_t i64) { _props = static_cast<int64_t> (i64); return true; }
     bool Uint64(uint64_t u64) { _props = static_cast<uint64_t> (u64) ; return true; }
     bool Double(double d) { _props = d; return true; }
-    bool String(const char* str, rj::SizeType length, bool copy) { _props = std::string(str, length) ; return true;
+    bool String(const char* str, rj::SizeType length, bool copy) { _props = std::string(str, length); return true;
     }
     bool StartObject() { return true; }
     bool Key(const char* str, rj::SizeType length, bool copy) { _props = std::string(str, length); return true;
@@ -99,6 +99,7 @@ std::string print_value(const rj::Value& val) {
             return value = "Object";
             break;
     }
+    return value;
 }
 
 //void printer(std::map<std::string, variant_type>& meta_data, std::vector<std::string>& keys) {
@@ -121,24 +122,24 @@ variant_type value_handler(const rj::Value& val) {
         for (const auto& [obj_key, obj_val] : val.GetObject()) {
             map.emplace(obj_key.GetString(), value_handler(obj_val));
 
-            std::cout << obj_key.GetString() << ": " << print_value(obj_val) << std::endl;
+//            std::cout << obj_key.GetString() << ": " << print_value(obj_val) << std::endl;
         }
         return map;
     } else if (val.IsArray()) {
         std::vector<variant_type> vec;
-        std::cout << "[ ";
+//        std::cout << "[ ";
         for (const auto& arr_value: val.GetArray()) {
             vec.push_back(value_handler(arr_value));
-            std::cout << print_value(arr_value);
+//            std::cout << print_value(arr_value);
         }
-        std::cout << " ]" << std::endl;
+//        std::cout << " ]" << std::endl;
 
         return vec;
     } else {
         Type_Handler val_type;
         val.Accept(val_type);
 
-        std::cout << print_value(val) << std::endl;
+//        std::cout << print_value(val) << std::endl;
 
         return val_type.get_value();
     }
@@ -160,7 +161,7 @@ auto process_doc (rj::Document& doc, const char* json) {
         for (const auto& prop : doc.GetArray()) {
             if (prop.IsObject()) {
                 for (const auto& [key, val] : prop.GetObject()) {
-                    std::cout << key.GetString() << ": ";
+                    std::cout << key.GetString() << ": " << std::endl;
                     meta_data.emplace(key.GetString(), value_handler(val));
 
                 }
@@ -168,7 +169,7 @@ auto process_doc (rj::Document& doc, const char* json) {
         }
     } else if (doc.IsObject()) {
         for (auto& [key, val] : doc.GetObject()) {
-            std::cout << key.GetString() << ": ";
+            std::cout << key.GetString() << ": " << std::endl;
             meta_data.emplace(key.GetString(), value_handler(val));
         }
     }
@@ -231,6 +232,26 @@ auto file_handler(auto& path) {
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+void output_File(std::map<std::string, variant_type>& map) {
+    std::string path{"/home/xavier/Workspace/metaData/results/unique_keys.txt"};
+    std::ofstream file(path);
+
+    for (auto& key : map) {
+        std::string ignore = "Unknown";
+        std::size_t found = key.first.find(ignore);
+        if (found != std::string::npos) {
+            continue;
+        } else {
+            file << key.first << std::endl;
+        }
+
+    }
+
+    file.close();
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 int main(int argc,char* argv[]) {
     //If a path is not passed via CLI.
     if (argc != 2) {
@@ -266,18 +287,16 @@ int main(int argc,char* argv[]) {
                 // Matched many keys with these substrings. Should return with the "dc" prefix. Removed "FORMAT", "TYPE".
         };
 
-        std::vector<std::string> ignore{"UNKNOWN"};
 
         if (is_directory(path)) {
             for (const auto &dir_entry: fs::recursive_directory_iterator(path)) {
-                fs::path d_path {dir_entry};
-                auto meta_data{file_handler(d_path)};
-//
-//                printer(meta_data, core_Keys);
-            }
+                fs::path dir_path{dir_entry};
+                auto meta_data {file_handler(dir_path)};
+                output_File(meta_data);
+                }
         } else {
             auto meta_data {file_handler(path)};
-//            printer(meta_data, core_Keys);
+            output_File(meta_data);
         }
     }
 

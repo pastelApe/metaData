@@ -25,6 +25,7 @@
   <component name="ChangeListManager">
     <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="Variant property works. Printer function prints key. TODO: print value.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -73,6 +74,10 @@
     <property name="cidr.known.project.marker" value="true" />
     <property name="cmake.loaded.for.project" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="settings.editor.selected.configurable" value="CMakeSettings" />
   </component>
@@ -184,6 +189,9 @@
       <workItem from="1641926704350" duration="17046000" />
       <workItem from="1642180479876" duration="899000" />
       <workItem from="1642181466054" duration="9471000" />
+      <workItem from="1642545952783" duration="1382000" />
+      <workItem from="1642547921993" duration="2016000" />
+      <workItem from="1642561324494" duration="2499000" />
     </task>
     <task id="LOCAL-00001" summary="Working on string comparison. Saving progress.">
       <created>1642180676848</created>
