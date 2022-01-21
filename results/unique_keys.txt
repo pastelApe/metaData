@@ -1,0 +1,724 @@
+
+AUTHOR
+AllPermissions
+Application Record Version
+ArticleDate
+ArticleDateText
+Author
+Autosize
+AvailableIn
+BW Mode
+Base Target
+Basic
+Boyd Conley
+Burst Mode
+Burst Mode 2
+By-line
+By-line Title
+CMS Document Id
+CODE_LANGUAGE
+Camera Id
+Caption Digest
+Caption/Abstract
+Category
+Changes
+Chroma BackgroundColor
+Chroma BackgroundIndex
+Chroma BlackIsZero
+Chroma ColorSpaceType
+Chroma Gamma
+Chroma NumChannels
+Chroma Palette PaletteEntry
+Coded Character Set
+Color Halftoning Information
+Color Mode
+Color Transfer Functions
+Color Transform
+Comments
+Company
+Component 1
+Component 2
+Component 3
+Component 4
+Compression CompressionTypeName
+Compression Lossless
+Compression NumProgressiveScans
+Compression Type
+Container
+Content-Encoding
+Content-Language
+Content-Length
+Content-Location
+Content-Style-Type
+Content-Type
+Content-Type-Hint
+Content-Type-Override
+Content-language
+ContentReviewDate
+Contributor
+Copyright
+Copyright Flag
+Copyright Notice
+CreationData
+CreationDate--Text
+DC.Contributor
+DC.Creator
+DC.Date
+DC.Date.created
+DC.Date.modified
+DC.Date.reviewed
+DC.Identifier
+DC.Language
+DC.Publisher
+DC.Subject
+DC.Title
+DC.Type
+DC.contributor
+DC.creator
+DC.date.created
+DC.date.modified
+DC.date.reviewed
+DC.description
+DC.epa.channel
+DC.format
+DC.keywords
+DC.language
+DC.publisher
+DC.rights
+DC.subject
+DC.subject.audience
+DC.subject.coverage
+DC.subject.epacat
+DC.subject.epaect
+DC.subject.epaem
+DC.subject.epahealth
+DC.subject.epaindustrial
+DC.subject.epaindustry
+DC.subject.eparegulation
+DC.subject.eparpc
+DC.subject.epasubstance
+DC.subject.organization
+DC.title
+DC.type
+DCS.dcsuri
+DCT Encode Version
+DCTERMS.audience
+DC_coverage
+DC_creator
+DC_date
+DC_description
+DC_format
+DC_identifier
+DC_language
+DC_publisher
+DC_rights
+DC_speaker
+DC_subject
+DC_title
+DC_type_publication
+DESCRIPTION
+Data BitsPerSample
+Data Dump
+Data PlanarConfiguration
+Data Precision
+Data SampleFormat
+Data SignificantBitsPerSample
+Date
+Date Content Reviewed
+Date Created
+Date Issued
+Date Revised
+Date of First Posting
+Date of Latest Posting
+Date/Time Stamp
+DateCreated
+Department
+Description
+Digital Zoom
+Dimension HorizontalPhysicalPixelSpacing
+Dimension HorizontalPixelOffset
+Dimension HorizontalPixelSize
+Dimension ImageOrientation
+Dimension PixelAspectRatio
+Dimension VerticalPhysicalPixelSpacing
+Dimension VerticalPixelOffset
+Dimension VerticalPixelSize
+Distribution
+DocKeywords
+Document FormatVersion
+Document ImageModificationTime
+E-mail
+EMAIL_OWNER_ADDRESS
+Enveloped Record Version
+Exif IFD0:Bits Per Sample
+Exif IFD0:Compression
+Exif IFD0:Contrast
+Exif IFD0:Copyright
+Exif IFD0:Custom Rendered
+Exif IFD0:Date/Time
+Exif IFD0:Digital Zoom Ratio
+Exif IFD0:Exposure Mode
+Exif IFD0:Gain Control
+Exif IFD0:Image Description
+Exif IFD0:Image Height
+Exif IFD0:Image Width
+Exif IFD0:Make
+Exif IFD0:Model
+Exif IFD0:Orientation
+Exif IFD0:Photometric Interpretation
+Exif IFD0:Planar Configuration
+Exif IFD0:Resolution Unit
+Exif IFD0:Samples Per Pixel
+Exif IFD0:Saturation
+Exif IFD0:Scene Capture Type
+Exif IFD0:Sharpness
+Exif IFD0:Software
+Exif IFD0:White Balance Mode
+Exif IFD0:X Resolution
+Exif IFD0:Y Resolution
+Exif IFD0:YCbCr Positioning
+Exif SubIFD:Aperture Value
+Exif SubIFD:Color Space
+Exif SubIFD:Components Configuration
+Exif SubIFD:Compressed Bits Per Pixel
+Exif SubIFD:Contrast
+Exif SubIFD:Custom Rendered
+Exif SubIFD:Date/Time Digitized
+Exif SubIFD:Date/Time Original
+Exif SubIFD:Digital Zoom Ratio
+Exif SubIFD:Exif Image Height
+Exif SubIFD:Exif Image Width
+Exif SubIFD:Exif Version
+Exif SubIFD:Exposure Bias Value
+Exif SubIFD:Exposure Index
+Exif SubIFD:Exposure Mode
+Exif SubIFD:Exposure Program
+Exif SubIFD:Exposure Time
+Exif SubIFD:F-Number
+Exif SubIFD:File Source
+Exif SubIFD:Flash
+Exif SubIFD:FlashPix Version
+Exif SubIFD:Focal Length
+Exif SubIFD:Focal Length 35
+Exif SubIFD:Gain Control
+Exif SubIFD:ISO Speed Ratings
+Exif SubIFD:Makernote
+Exif SubIFD:Max Aperture Value
+Exif SubIFD:Metering Mode
+Exif SubIFD:Saturation
+Exif SubIFD:Scene Capture Type
+Exif SubIFD:Scene Type
+Exif SubIFD:Sensing Method
+Exif SubIFD:Sharpness
+Exif SubIFD:Shutter Speed Value
+Exif SubIFD:Subject Distance Range
+Exif SubIFD:User Comment
+Exif SubIFD:White Balance
+Exif SubIFD:White Balance Mode
+Exif Thumbnail:Compression
+Exif Thumbnail:Orientation
+Exif Thumbnail:Resolution Unit
+Exif Thumbnail:Thumbnail Length
+Exif Thumbnail:Thumbnail Offset
+Exif Thumbnail:X Resolution
+Exif Thumbnail:Y Resolution
+Expiration
+Expires
+Exposure Compensation
+Exposure Time
+F Number
+File Modified Date
+File Name
+File Size
+Flags 0
+Flags 1
+Flash Fired
+Flash Mode
+Focus Mode
+GENERATOR
+GTS_PDFXConformance
+GTS_PDFXVersion
+Generator
+Global Altitude
+Global Angle
+GraphicControlExtension
+Grayscale and Multichannel Halftoning Information
+Grayscale and Multichannel Transfer Function
+Grid and Guides Information
+HFURL
+HRCode
+ICC Untagged Profile
+ICC:Blue Colorant
+ICC:Blue TRC
+ICC:CMM Type
+ICC:Class
+ICC:Color space
+ICC:Device Mfg Description
+ICC:Device Model Description
+ICC:Device manufacturer
+ICC:Device model
+ICC:Green Colorant
+ICC:Green TRC
+ICC:Luminance
+ICC:Measurement
+ICC:Media Black Point
+ICC:Media White Point
+ICC:Primary Platform
+ICC:Profile Connection Space
+ICC:Profile Copyright
+ICC:Profile Date/Time
+ICC:Profile Description
+ICC:Profile Size
+ICC:Red Colorant
+ICC:Red TRC
+ICC:Rendering Intent
+ICC:Signature
+ICC:Tag Count
+ICC:Technology
+ICC:Version
+ICC:Video Card Gamma
+ICC:Viewing Conditions
+ICC:Viewing Conditions Description
+ICC:XYZ values
+IHDR
+ISO
+ISO Setting
+Image Height
+Image Width
+ImageDescriptor
+Institute
+Interoperability:Interoperability Index
+Interoperability:Interoperability Version
+JPEG Comment
+JPEG Quality
+KeyWords
+Keywords
+Kodak Model
+LangID
+Language
+LastUpdated
+Layer Groups Enabled ID
+Layer Selection IDs
+Layer State Information
+Layers Group Information
+Link-Title
+MAIL_MSG_ID1
+MAIL_MSG_ID2
+MS.LOCALE
+MSSmartTagsPreventParsing
+Mac Print Info
+Macro
+Metering Mode
+Month/Day Created
+NCCL_088-50124022032
+NCCL_088-50124022033
+NCCL_088-50124022034
+NCCL_088-50124022035
+NCCL_DocId
+Name
+Notification
+Number of Components
+Number of Tables
+Object Name
+OrgType
+Original Manufacturer Model
+Originator
+Owner
+PICS-Label
+PLTE PLTEEntry
+PTEX.Fullbanner
+Permissions
+Photoshop 4.0 Thumbnail
+Pixel Aspect Ratio
+Plug-in 1 Data
+Plug-in 2 Data
+Posted
+Posted by
+Poster
+Pragma
+Pre Capture Frames
+Print Flags
+Print Flags Information
+Print Scale
+PrintIM Version
+ProgId
+Quality
+RESPONSE_SENDER_NAME
+ROBOTS
+Refresh
+ReplicateProject
+Resolution Info
+Resolution Units
+Responsible Person
+Review
+Revision Date
+SPDF
+Scale
+Seed Number
+Sequence Number
+Service
+Sharpness
+Shutter Speed
+Slices
+SourceModified
+SpanishDocID
+Special Mode
+Style
+Super
+TargAud
+Text TextEntry
+Thumbnail Data
+Thumbnail Height Pixels
+Thumbnail Width Pixels
+Time Created
+Title
+Total Zoom
+Transparency Alpha
+Transparency TransparentIndex
+URL List
+Urgency
+UserName
+Version
+Version Info
+WPS-ARTICLEDOI
+WPS-JOURNALDOI
+WPS-PROCLEVEL
+WT.cg_n
+WT.cg_s
+WT.sp
+WT.sv
+WT.ti
+White Balance
+X Resolution
+X-TIKA:EXCEPTION:container_exception
+X-TIKA:EXCEPTION:embedded_exception
+X-TIKA:EXCEPTION:embedded_parser
+X-TIKA:EXCEPTION:warn
+X-TIKA:Parsed-By
+X-TIKA:content
+X-TIKA:content_handler
+X-TIKA:embedded_depth
+X-TIKA:embedded_resource_path
+X-TIKA:origResourceName
+X-TIKA:parse_time_millis
+XML Data
+XMP Value Count
+Y Resolution
+YCFooter
+Year Created
+_AdHocReviewCycleID
+_AuthorEmail
+_AuthorEmailDisplayName
+_EmailSubject
+_PreviousAdHocReviewCycleID
+abstract
+accessConstraints
+access_permission:assemble_document
+access_permission:can_modify
+access_permission:can_print
+access_permission:can_print_degraded
+access_permission:extract_content
+access_permission:extract_for_accessibility
+access_permission:fill_in_form
+access_permission:modify_annotations
+agencyProgram
+author
+bKGD bKGD_Grayscale
+bKGD bKGD_Palette
+bbsect
+bn_title
+cHRM
+citation_abstract_html_url
+citation_authors
+citation_date
+citation_doi
+citation_firstpage
+citation_fulltext_html_url
+citation_issue
+citation_journal_title
+citation_pdf_url
+citation_pmid
+citation_title
+citation_volume
+classification
+contactCity
+contactName
+contactNetworkAddress
+contactOrganization
+contactPhoneNumber
+contactState
+contactStreetAddress1
+contactZipcode
+content-language
+content-owner
+content-style-type
+cp:category
+cp:revision
+createDate
+created
+creator
+csv:delimiter
+custom:A_AC_Program
+custom:A_ATA_Chapter
+custom:A_ATA_SubChapter
+custom:A_Author_Name
+custom:A_Author_Siglum
+custom:A_Doc_Issue
+custom:A_Doc_Origin
+custom:A_Doc_Reference
+custom:A_Doc_Title
+custom:A_Doc_Type
+custom:A_Project
+custom:Assigned to0
+custom:BackColor
+custom:ButtonType
+custom:Compression
+custom:ContentType
+custom:Created By
+custom:Creator
+custom:DateCreated
+custom:DateReviewed
+custom:Document Sensitivity
+custom:DownloadIEButton
+custom:DownloadOriginal
+custom:GraphicType
+custom:HomePage
+custom:Issued
+custom:Keywords
+custom:Language
+custom:LinkColor
+custom:MAP approval
+custom:MailAddress
+custom:NavBtnPos
+custom:OCI Restriction
+custom:OperationalContact
+custom:OutputDir
+custom:OwningOrganization
+custom:PolicyNumber
+custom:PrimaryClassification
+custom:Remove CONFIDENTIAL text
+custom:Revision Status
+custom:ScreenSize
+custom:ScreenUsage
+custom:SecondaryClassification
+custom:SensitivityID
+custom:Sent to Field
+custom:ShowNotes
+custom:Subject
+custom:TemplateType
+custom:TextColor
+custom:TransparentButton
+custom:Type
+custom:UseBrowserColor
+custom:VisitedColor
+custom:_AdHocReviewCycleID
+custom:_Author
+custom:_AuthorEmail
+custom:_AuthorEmailDisplayName
+custom:_Comments
+custom:_EmailSubject
+custom:_PreviousAdHocReviewCycleID
+custom:display_urn:schemas-microsoft-com:office:office#OperationalContact
+custom:docCases
+custom:docDate
+custom:docPeriodBegin
+custom:docType
+custom:lqminfo
+custom:lqmsess
+date
+datecreated
+datereviewed
+db
+dc.audience
+dc.category
+dc.date.modified
+dc.description
+dc.format
+dc.identifier
+dc.imagesearch.code
+dc.imagesearch.image_alt
+dc.imagesearch.image_url
+dc.imggallery.tnalt
+dc.imggallery.tnurl
+dc.language
+dc.publisher
+dc.publisher.tool
+dc.subject
+dc.subject.mission
+dc.title
+dc.type
+dc:creator
+dc:description
+dc:format
+dc:language
+dc:publisher
+dc:rights
+dc:subject
+dc:title
+dcterms:created
+dcterms:modified
+description
+domain
+embeddedRelationshipId
+embeddedResourceType
+embeddedStorageClassId
+exif:DateTimeOriginal
+exif:ExposureTime
+exif:FNumber
+exif:Flash
+exif:FocalLength
+exif:IsoSpeedRatings
+expires
+extended-properties:Application
+extended-properties:Company
+extended-properties:DocSecurity
+extended-properties:Manager
+extended-properties:Template
+extended-properties:TotalTime
+gAMA
+generator
+govType
+height
+imagetoolbar
+keywords
+language
+last_modified
+medium
+meta:character-count
+meta:keyword
+meta:last-author
+meta:page-count
+meta:print-date
+meta:slide-count
+meta:word-count
+modestem
+modestem1
+modestem2
+modestem3
+modestem4
+modified
+myTitle
+name
+ncbi_app
+ncbi_pdid
+ncbi_phid
+orgcode
+originatorDepartment
+originatorJurisdiction
+originatorSection
+pHYs
+pagetitle
+pdf:PDFVersion
+pdf:charsPerPage
+pdf:docinfo:created
+pdf:docinfo:creator
+pdf:docinfo:creator_tool
+pdf:docinfo:custom:AllPermissions
+pdf:docinfo:custom:Base Target
+pdf:docinfo:custom:Category
+pdf:docinfo:custom:Changes
+pdf:docinfo:custom:Comments
+pdf:docinfo:custom:Company
+pdf:docinfo:custom:Container
+pdf:docinfo:custom:CreationData
+pdf:docinfo:custom:CreationDate--Text
+pdf:docinfo:custom:DateCreated
+pdf:docinfo:custom:EMAIL_OWNER_ADDRESS
+pdf:docinfo:custom:GTS_PDFXConformance
+pdf:docinfo:custom:GTS_PDFXVersion
+pdf:docinfo:custom:Language
+pdf:docinfo:custom:LastUpdated
+pdf:docinfo:custom:MAIL_MSG_ID1
+pdf:docinfo:custom:MAIL_MSG_ID2
+pdf:docinfo:custom:NCCL_088-50124022032
+pdf:docinfo:custom:NCCL_088-50124022033
+pdf:docinfo:custom:NCCL_088-50124022034
+pdf:docinfo:custom:NCCL_088-50124022035
+pdf:docinfo:custom:NCCL_DocId
+pdf:docinfo:custom:Name
+pdf:docinfo:custom:Owner
+pdf:docinfo:custom:PTEX.Fullbanner
+pdf:docinfo:custom:Permissions
+pdf:docinfo:custom:RESPONSE_SENDER_NAME
+pdf:docinfo:custom:ReplicateProject
+pdf:docinfo:custom:SPDF
+pdf:docinfo:custom:Scale
+pdf:docinfo:custom:SourceModified
+pdf:docinfo:custom:Style
+pdf:docinfo:custom:UserName
+pdf:docinfo:custom:WPS-ARTICLEDOI
+pdf:docinfo:custom:WPS-JOURNALDOI
+pdf:docinfo:custom:WPS-PROCLEVEL
+pdf:docinfo:custom:YCFooter
+pdf:docinfo:custom:_AdHocReviewCycleID
+pdf:docinfo:custom:_AuthorEmail
+pdf:docinfo:custom:_AuthorEmailDisplayName
+pdf:docinfo:custom:_EmailSubject
+pdf:docinfo:custom:_PreviousAdHocReviewCycleID
+pdf:docinfo:keywords
+pdf:docinfo:modified
+pdf:docinfo:producer
+pdf:docinfo:subject
+pdf:docinfo:title
+pdf:docinfo:trapped
+pdf:encrypted
+pdf:hasAcroFormFields
+pdf:hasCollection
+pdf:hasMarkedContent
+pdf:hasXFA
+pdf:hasXMP
+pdf:producer
+pdf:unmappedUnicodeCharsPerPage
+pdfa:PDFVersion
+pdfaid:conformance
+pdfaid:part
+pics-label
+posted
+poster
+pragma
+publisher
+rating
+refresh
+resourceName
+revised
+rno
+robots
+sBIT sBIT_Palette
+sBIT sBIT_RGB
+sBIT sBIT_RGBAlpha
+sRGB
+site_code
+spsite_id
+subjects
+tEXt tEXtEntry
+tIME
+tRNS tRNS_Palette tRNS_PaletteEntry
+tiff:BitsPerSample
+tiff:ImageLength
+tiff:ImageWidth
+tiff:Make
+tiff:Model
+tiff:Orientation
+tiff:ResolutionUnit
+tiff:SamplesPerPixel
+tiff:Software
+tiff:XResolution
+tiff:YResolution
+timePeriodTextual
+title
+updated
+verify-v1
+vs_defaultClientScript
+vs_targetSchema
+w:Comments
+webmaster
+width
+xmp:About
+xmp:CreateDate
+xmp:CreatorTool
+xmp:MetadataDate
+xmp:ModifyDate
+xmpMM:DerivedFrom:DocumentID
+xmpMM:DerivedFrom:InstanceID
+xmpMM:DocumentID
+xmpTPg:NPages
