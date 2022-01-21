@@ -9,12 +9,14 @@
 
 //C++ Requests: Curl for People
 #include <cpr/cpr.h>
+#include <set>
 
 //RapidJson
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
 #include "rapidjson/reader.h"
 #include "rapidjson/stringbuffer.h"
+
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
@@ -102,14 +104,6 @@ std::string print_value(const rj::Value& val) {
     return value;
 }
 
-//void printer(std::map<std::string, variant_type>& meta_data, std::vector<std::string>& keys) {
-//    for (const auto &prop: meta_data) {
-//        if (key_found(keys, prop.first)) {
-//            std::cout << prop.first << ": " << std::endl;
-//        }
-//    }
-//}
-
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 #pragma clang diagnostic push
@@ -119,32 +113,27 @@ std::string print_value(const rj::Value& val) {
 variant_type value_handler(const rj::Value& val) {
     if (val.IsObject()) {
         std::map<std::string, variant_type> map;
+
         for (const auto& [obj_key, obj_val] : val.GetObject()) {
             map.emplace(obj_key.GetString(), value_handler(obj_val));
-
-//            std::cout << obj_key.GetString() << ": " << print_value(obj_val) << std::endl;
         }
+
         return map;
     } else if (val.IsArray()) {
         std::vector<variant_type> vec;
-//        std::cout << "[ ";
+
         for (const auto& arr_value: val.GetArray()) {
             vec.push_back(value_handler(arr_value));
-//            std::cout << print_value(arr_value);
         }
-//        std::cout << " ]" << std::endl;
 
         return vec;
     } else {
         Type_Handler val_type;
         val.Accept(val_type);
 
-//        std::cout << print_value(val) << std::endl;
-
         return val_type.get_value();
     }
 }
-
 
 auto process_doc (rj::Document& doc, const char* json) {
     doc.Parse(json);
@@ -161,15 +150,12 @@ auto process_doc (rj::Document& doc, const char* json) {
         for (const auto& prop : doc.GetArray()) {
             if (prop.IsObject()) {
                 for (const auto& [key, val] : prop.GetObject()) {
-                    std::cout << key.GetString() << ": " << std::endl;
                     meta_data.emplace(key.GetString(), value_handler(val));
-
                 }
             }
         }
     } else if (doc.IsObject()) {
         for (auto& [key, val] : doc.GetObject()) {
-            std::cout << key.GetString() << ": " << std::endl;
             meta_data.emplace(key.GetString(), value_handler(val));
         }
     }
@@ -178,7 +164,7 @@ auto process_doc (rj::Document& doc, const char* json) {
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-std::vector<char> file_Buffer (auto& path) {
+std::vector<char> file_Buffer (fs::path& path) {
     //Open the file.
     std::ifstream stream {path.string()};
 
@@ -197,9 +183,8 @@ std::vector<char> file_Buffer (auto& path) {
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-cpr::Response put_Request(std::vector<char>& buff, auto& path) {
+cpr::Response post_request(std::vector<char>& buff, fs::path& path) {
     fs::path file_Name = path.filename();
-
     auto url {cpr::Url{"http://localhost:9998/rmeta/form/text"}};
     auto buff_Size {cpr::Buffer{buff.begin(), buff.end(), file_Name}};
 
@@ -220,31 +205,39 @@ cpr::Response put_Request(std::vector<char>& buff, auto& path) {
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-auto file_handler(auto& path) {
-    std::vector<char> buff {file_Buffer(path)};
-    std::string response {put_Request(buff, path).text};
-    rj::Document doc;
+std::set<std::string> keys {};
+std::set<std::string> path_handler(fs::path& path) {
+    if (is_regular_file(path)) {
+        std::vector<char> buff{file_Buffer(path)};
+        std::string response { post_request(buff, path).text };
+        rj::Document doc;
 
-    auto meta_data {process_doc(doc, response.c_str())};
+        for (auto& key : process_doc(doc, response.c_str())) {
+            keys.emplace(key.first);
+        }
 
-    return meta_data;
+    } else if (is_directory(path)) {
+        for (auto &dir_entry: fs::recursive_directory_iterator(path)) {
+            path_handler((fs::path &) dir_entry);
+        }
+    }
+    return keys;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void output_File(std::map<std::string, variant_type>& map) {
+void output_File(std::set<std::string>& set) {
     std::string path{"/home/xavier/Workspace/metaData/results/unique_keys.txt"};
     std::ofstream file(path);
 
-    for (auto& key : map) {
+    for (auto& key : set) {
         std::string ignore = "Unknown";
-        std::size_t found = key.first.find(ignore);
+        std::size_t found = key.find(ignore);
         if (found != std::string::npos) {
             continue;
         } else {
-            file << key.first << std::endl;
+            file << key << std::endl;
         }
-
     }
 
     file.close();
@@ -253,13 +246,13 @@ void output_File(std::map<std::string, variant_type>& map) {
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 int main(int argc,char* argv[]) {
+    std::set<std::string> meta_data {};
     //If a path is not passed via CLI.
     if (argc != 2) {
-        std::cout << "Please enter a valid path." << "\n";
+        std::cout << "Please enter a valid path." << std::endl;
         return 1;
-    }
-    else {
-        fs::path path{argv[1]};
+    } else {
+        fs::path path { argv[1] };
         try {
             fs::exists(path);
         }
@@ -287,18 +280,9 @@ int main(int argc,char* argv[]) {
                 // Matched many keys with these substrings. Should return with the "dc" prefix. Removed "FORMAT", "TYPE".
         };
 
-
-        if (is_directory(path)) {
-            for (const auto &dir_entry: fs::recursive_directory_iterator(path)) {
-                fs::path dir_path{dir_entry};
-                auto meta_data {file_handler(dir_path)};
-                output_File(meta_data);
-                }
-        } else {
-            auto meta_data {file_handler(path)};
-            output_File(meta_data);
-        }
+        meta_data = path_handler(path);
     }
 
+    output_File(meta_data);
     return 0;
 }
