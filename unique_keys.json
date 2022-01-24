@@ -747,45 +747,6 @@ Exif IFD0:Strip Offsets
 Exif IFD0:Subject Distance Range
 Exif IFD0:Subject Location
 Exif IFD0:Time Zone Offset
-Exif IFD0:Unknown tag (0x000b)
-Exif IFD0:Unknown tag (0x0125)
-Exif IFD0:Unknown tag (0x0140)
-Exif IFD0:Unknown tag (0x0150)
-Exif IFD0:Unknown tag (0x0201)
-Exif IFD0:Unknown tag (0x0202)
-Exif IFD0:Unknown tag (0x0301)
-Exif IFD0:Unknown tag (0x0302)
-Exif IFD0:Unknown tag (0x0303)
-Exif IFD0:Unknown tag (0x0320)
-Exif IFD0:Unknown tag (0x0404)
-Exif IFD0:Unknown tag (0x040a)
-Exif IFD0:Unknown tag (0x040b)
-Exif IFD0:Unknown tag (0x5001)
-Exif IFD0:Unknown tag (0x5002)
-Exif IFD0:Unknown tag (0x5003)
-Exif IFD0:Unknown tag (0x5004)
-Exif IFD0:Unknown tag (0x5005)
-Exif IFD0:Unknown tag (0x5006)
-Exif IFD0:Unknown tag (0x5008)
-Exif IFD0:Unknown tag (0x5009)
-Exif IFD0:Unknown tag (0x500a)
-Exif IFD0:Unknown tag (0x500b)
-Exif IFD0:Unknown tag (0x500c)
-Exif IFD0:Unknown tag (0x500d)
-Exif IFD0:Unknown tag (0x500f)
-Exif IFD0:Unknown tag (0x5010)
-Exif IFD0:Unknown tag (0x5012)
-Exif IFD0:Unknown tag (0x5100)
-Exif IFD0:Unknown tag (0x5102)
-Exif IFD0:Unknown tag (0x5103)
-Exif IFD0:Unknown tag (0x5110)
-Exif IFD0:Unknown tag (0x5111)
-Exif IFD0:Unknown tag (0x5112)
-Exif IFD0:Unknown tag (0x80a6)
-Exif IFD0:Unknown tag (0x827d)
-Exif IFD0:Unknown tag (0x8290)
-Exif IFD0:Unknown tag (0x92d6)
-Exif IFD0:Unknown tag (0xea1d)
 Exif IFD0:White Balance Mode
 Exif IFD0:White Point
 Exif IFD0:Windows XP Author
@@ -866,22 +827,6 @@ Exif SubIFD:Subject Distance
 Exif SubIFD:Subject Distance Range
 Exif SubIFD:Subject Location
 Exif SubIFD:Unique Image ID
-Exif SubIFD:Unknown tag (0x0201)
-Exif SubIFD:Unknown tag (0x0202)
-Exif SubIFD:Unknown tag (0xea1d)
-Exif SubIFD:Unknown tag (0xfde8)
-Exif SubIFD:Unknown tag (0xfde9)
-Exif SubIFD:Unknown tag (0xfe4c)
-Exif SubIFD:Unknown tag (0xfe4d)
-Exif SubIFD:Unknown tag (0xfe4e)
-Exif SubIFD:Unknown tag (0xfe51)
-Exif SubIFD:Unknown tag (0xfe52)
-Exif SubIFD:Unknown tag (0xfe53)
-Exif SubIFD:Unknown tag (0xfe54)
-Exif SubIFD:Unknown tag (0xfe55)
-Exif SubIFD:Unknown tag (0xfe56)
-Exif SubIFD:Unknown tag (0xfe57)
-Exif SubIFD:Unknown tag (0xfe58)
 Exif SubIFD:User Comment
 Exif SubIFD:White Balance
 Exif SubIFD:White Balance Mode

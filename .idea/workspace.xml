@@ -23,10 +23,11 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="Variant property works. Printer function prints key. TODO: print value.">
+    <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="Add generated key file.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/unique_keys.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/unique_keys.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/unique_keys.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/unique_keys.json" beforeDir="false" afterPath="$PROJECT_DIR$/unique_keys.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -198,7 +199,10 @@
       <workItem from="1642545952783" duration="1382000" />
       <workItem from="1642547921993" duration="2016000" />
       <workItem from="1642561324494" duration="2499000" />
-      <workItem from="1642718638045" duration="13491000" />
+      <workItem from="1642718638045" duration="13630000" />
+      <workItem from="1642737951432" duration="131000" />
+      <workItem from="1643033330414" duration="339000" />
+      <workItem from="1643033750435" duration="20698000" />
     </task>
     <task id="LOCAL-00001" summary="Working on string comparison. Saving progress.">
       <created>1642180676848</created>
@@ -214,7 +218,21 @@
       <option name="project" value="LOCAL" />
       <updated>1642195236841</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="path_handler function works. Used global set to store keys from the map of metadata properties.">
+      <created>1642737869454</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1642737869454</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Add generated key file.">
+      <created>1642737980246</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1642737980246</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -238,7 +256,9 @@
     </ignored-roots>
     <MESSAGE value="Working on string comparison. Saving progress." />
     <MESSAGE value="Variant property works. Printer function prints key. TODO: print value." />
-    <option name="LAST_COMMIT_MESSAGE" value="Variant property works. Printer function prints key. TODO: print value." />
+    <MESSAGE value="path_handler function works. Used global set to store keys from the map of metadata properties." />
+    <MESSAGE value="Add generated key file." />
+    <option name="LAST_COMMIT_MESSAGE" value="Add generated key file." />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

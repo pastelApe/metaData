@@ -43,6 +43,9 @@ public:
     variant_type&& get_value() {return std::move(_props); }
 
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "HidingNonVirtualFunction"
+
     bool Null() { return true; }
     bool Bool(bool b) { _props = b; return true; }
     bool Int(int i) { _props = static_cast<int64_t> (i); return true; }
@@ -62,17 +65,6 @@ public:
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-bool key_found (std::vector<std::string>& keys, const std::string& to_find) {
-    //Make case-insensitive for comparison.
-    std::string u_key {to_find};
-    std::transform(u_key.begin(), u_key.end(), u_key.begin(), ::toupper);
-
-    bool found = std::any_of(keys.begin(), keys.end(), [&](auto key) {
-        return (u_key.find(key) != std::string::npos);
-    });
-
-    return found;
-}
 std::string print_value(const rj::Value& val) {
     Type_Handler val_type;
     val.Accept(val_type);
@@ -135,9 +127,9 @@ variant_type value_handler(const rj::Value& val) {
     }
 }
 
-auto process_doc (rj::Document& doc, const char* json) {
+std::set<std::string> process_doc (rj::Document& doc, const char* json) {
     doc.Parse(json);
-    std::map<std::string ,variant_type> meta_data;
+    std::set<std::string> meta_data;
 
     if (doc.HasParseError()) {
         fprintf(stderr, "Error (offset %u): %s",
@@ -149,14 +141,17 @@ auto process_doc (rj::Document& doc, const char* json) {
     if (doc.IsArray()) {
         for (const auto& prop : doc.GetArray()) {
             if (prop.IsObject()) {
-                for (const auto& [key, val] : prop.GetObject()) {
-                    meta_data.emplace(key.GetString(), value_handler(val));
+                for (const auto& key : prop.GetObject()) {
+                    std::string u_key {key.name.GetString()};
+                    std::transform(u_key.begin(), u_key.end(), u_key.begin(), ::toupper);
+                    meta_data.emplace(u_key);
                 }
             }
         }
     } else if (doc.IsObject()) {
-        for (auto& [key, val] : doc.GetObject()) {
-            meta_data.emplace(key.GetString(), value_handler(val));
+        for (auto& key : doc.GetObject()) {
+            std::string u_key {key.name.GetString()};
+            std::transform(u_key.begin(), u_key.end(), u_key.begin(), ::toupper);
         }
     }
     return meta_data;
@@ -213,7 +208,7 @@ std::set<std::string> path_handler(fs::path& path) {
         rj::Document doc;
 
         for (auto& key : process_doc(doc, response.c_str())) {
-            keys.emplace(key.first);
+            keys.emplace(key);
         }
 
     } else if (is_directory(path)) {
@@ -226,27 +221,46 @@ std::set<std::string> path_handler(fs::path& path) {
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void output_File(std::set<std::string>& set) {
-    std::string path{"/home/xavier/Workspace/metaData/results/unique_keys.txt"};
-    std::ofstream file(path);
-
-    for (auto& key : set) {
-        std::string ignore = "Unknown";
-        std::size_t found = key.find(ignore);
-        if (found != std::string::npos) {
+void create_sets (std::vector<std::string>& core_keys, std::string& core_path, std::string& remaining_path) {
+    std::set<std::string> core_set;
+    std::set<std::string> remaining_set;
+    //Make case-insensitive for comparison.
+    std::set<std::string> u_set;
+    for (auto& key : keys) {
+        std::string ignore = "UNKNOWN";
+        if ((key.find(ignore) != std::string::npos) ) {
             continue;
         } else {
-            file << key << std::endl;
+            for (auto &c_key: core_keys) {
+                if (key.find(c_key) != std::string::npos) {
+                    core_set.emplace(key);
+                } else {
+                    remaining_set.emplace(key);
+                }
+            }
         }
     }
+    std::ofstream core_file(core_path);
 
-    file.close();
+    for (auto& key: core_set) {
+        core_file << key << std::endl;
+    }
+
+    core_file.close();
+
+    std::ofstream remaining_file(remaining_path);
+
+    for (auto& key: remaining_set) {
+        remaining_file << key << std::endl;
+    }
+
+    remaining_file.close();
+
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 int main(int argc,char* argv[]) {
-    std::set<std::string> meta_data {};
     //If a path is not passed via CLI.
     if (argc != 2) {
         std::cout << "Please enter a valid path." << std::endl;
@@ -265,24 +279,31 @@ int main(int argc,char* argv[]) {
                     << "code().message(): " << fs_error.code().message() << "\n"
                     << "code().category():" << fs_error.code().category().name() << "\n";
         }
-
-//          Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
-//          This set also includes the Dublin Core properties.
-//          Removed properties that can be stored in the flat file for later.
-        std::vector<std::string> core_Keys{
-                "ALTITUDE", "COMMENTS", "CONTRIBUTOR", "COVERAGE", "CREATED", "CREATOR", "CREATOR_TOOL", "DATE", "DC:",
-                "DC.", "DC_", "DCTERMS:", "DCTM:", "DESCRIPTION", "EMBEDDED_RELATIONSHIP_ID", "EMBEDDED_RESOURCE_PATH",
-                "EMBEDDED_RESOURCE_TYPE", "HAS_SIGNATURE", "IDENTIFIER", "LANGUAGE", "LATITUDE", "LONGITUDE",
-                "METADATA_DATE", "MODIFIED", "MODIFIER", "ORIGINAL_RESOURCE_NAME", "PRINT_DATE", "PROTECTED",
-                "PUBLISHER",
-                "RATING", "RELATION", "RESOURCE_NAME_KEY", "REVISION", "RIGHTS", "SOURCE", "SOURCE_PATH", "SUBJECT",
-                "TITLE",
-                // Matched many keys with these substrings. Should return with the "dc" prefix. Removed "FORMAT", "TYPE".
-        };
-
-        meta_data = path_handler(path);
+        //Creates global set meta_data.
+        path_handler(path);
     }
+    /*
+      Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
+      This set also includes the Dublin Core properties as well as properties found from custom fields that
+      match a core field.
 
-    output_File(meta_data);
+      Removed "FORMAT", "TYPE".
+
+      Included "AUTHOR",
+     */
+    std::vector<std::string> core_keys {
+        "AUTHOR", "ALTITUDE", "COMMENTS", "CONTRIBUTOR", "COVERAGE", "CREATED", "CREATOR", "CREATOR_TOOL", "DATE", "DC:",
+        "DC.", "DC_", "DCTERMS:", "DCTM:", "DESCRIPTION", "EMBEDDED_RELATIONSHIP_ID", "EMBEDDED_RESOURCE_PATH",
+        "EMBEDDED_RESOURCE_TYPE", "HAS_SIGNATURE", "IDENTIFIER", "LANGUAGE", "LATITUDE", "LONGITUDE", "METADATA_DATE",
+        "MODIFIED", "MODIFIER", "ORIGINAL_RESOURCE_NAME", "PRINT_DATE", "PROTECTED", "PUBLISHER", "RATING", "RELATION",
+        "RESOURCE_NAME_KEY", "REVISION", "RIGHTS", "SOURCE", "SOURCE_PATH", "SUBJECT", "TITLE"
+    };
+
+    std::string core_txt {"/home/xavier/Workspace/metaData/results/core_keys.txt"};
+    std::string remaining_txt {"/home/xavier/Workspace/metaData/results/remaining_keys.txt"};
+    create_sets(core_keys, core_txt, remaining_txt);
+
     return 0;
 }
+
+#pragma clang diagnostic pop
