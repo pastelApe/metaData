@@ -1,15 +1,20 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "HidingNonVirtualFunction"
+#pragma ide diagnostic ignored "misc-no-recursion"
+#pragma ide diagnostic ignored "readability-convert-member-functions-to-static"
 //STL
 #include <filesystem>
 #include <iostream>
-#include <vector>
 #include <map>
+#include <set>
+#include <vector>
 
 //Boost
 #include "boost/variant.hpp"
+#include "boost/algorithm/string.hpp"
 
 //C++ Requests: Curl for People
-#include <cpr/cpr.h>
-#include <set>
+#include "cpr/cpr.h"
 
 //RapidJson
 #include "rapidjson/document.h"
@@ -32,7 +37,7 @@ typedef boost::make_recursive_variant<
         double,
         std::string,
         std::vector<boost::recursive_variant_>,
-std::map<std::string, boost::recursive_variant_>>::type variant_type;
+        std::map<std::string, boost::recursive_variant_>>::type variant_type;
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
@@ -40,11 +45,10 @@ struct Type_Handler : public rj::BaseReaderHandler<rj::UTF8<>, Type_Handler> {
 private:
     variant_type _props;
 public:
-    variant_type&& get_value() {return std::move(_props); }
-
-
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "HidingNonVirtualFunction"
+    // && is normally only used to declare a parameter of a function. And it only takes an r-value expression.
+    variant_type&& get_value() {
+        return std::move(_props);
+    }
 
     bool Null() { return true; }
     bool Bool(bool b) { _props = b; return true; }
@@ -53,10 +57,14 @@ public:
     bool Int64(int64_t i64) { _props = static_cast<int64_t> (i64); return true; }
     bool Uint64(uint64_t u64) { _props = static_cast<uint64_t> (u64) ; return true; }
     bool Double(double d) { _props = d; return true; }
-    bool String(const char* str, rj::SizeType length, bool copy) { _props = std::string(str, length); return true;
+    bool String(const char* str, rj::SizeType length, bool copy) {
+        _props = std::string(str, length);
+        return true;
     }
     bool StartObject() { return true; }
-    bool Key(const char* str, rj::SizeType length, bool copy) { _props = std::string(str, length); return true;
+    bool Key(const char* str, rj::SizeType length, bool copy) {
+        _props = std::string(str, length);
+        return true;
     }
     bool EndObject(rj::SizeType memberCount) { return true; }
     bool StartArray() { return true; }
@@ -64,8 +72,7 @@ public:
 };
 
 /*--------------------------------------------------------------------------------------------------------------------*/
-
-std::string print_value(const rj::Value& val) {
+void print_value(rj::Value& val) {
     Type_Handler val_type;
     val.Accept(val_type);
 
@@ -73,63 +80,69 @@ std::string print_value(const rj::Value& val) {
 
     switch (val.GetType()) {
         case rj::kNullType :
-            return value = "Null";
+            std::cout << "Null";
             break;
         case rj::kFalseType :
-            return value = "False";
-            break;
         case rj::kTrueType :
-            return value = "True";
+            std::cout << std::boolalpha << val.GetBool();
             break;
         case rj::kNumberType :
-            return value = "Number";
+
+            if (val.IsUint64()) {
+                std::cout << val.GetUint64();
+            } else if (val.IsInt64()) {
+                std::cout << val.GetInt64();
+            } else {
+                std::cout << val.GetDouble();
+            }
             break;
         case rj::kStringType :
-            return value = val.GetString();
+            std::cout << val.GetString();
         case rj::kArrayType :
-            return value = "Array";
+            std::cout << "[ ";
+            for (auto& v : val.GetArray()) {
+                print_value(v);
+                std::cout << ", ";
+            }
+            std::cout << " ]";
             break;
         case rj::kObjectType :
-            return value = "Object";
+            for (auto& obj_v : val.GetObject()) {
+                std::cout << "{ ";
+                print_value((rj::Value &)obj_v);
+            }
             break;
     }
-    return value;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "misc-no-recursion"
-
-//value_handler is a recursive function. Checks all values for child objects or arrays.
+//value_handler is a recursive function. Checks all values including child objects and arrays.
 variant_type value_handler(const rj::Value& val) {
     if (val.IsObject()) {
         std::map<std::string, variant_type> map;
-
         for (const auto& [obj_key, obj_val] : val.GetObject()) {
             map.emplace(obj_key.GetString(), value_handler(obj_val));
         }
-
         return map;
     } else if (val.IsArray()) {
         std::vector<variant_type> vec;
-
         for (const auto& arr_value: val.GetArray()) {
             vec.push_back(value_handler(arr_value));
         }
-
         return vec;
     } else {
         Type_Handler val_type;
         val.Accept(val_type);
-
         return val_type.get_value();
     }
 }
 
-std::set<std::string> process_doc (rj::Document& doc, const char* json) {
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+std::map<std::string ,variant_type> process_doc (rj::Document& doc, const char* json) {
     doc.Parse(json);
-    std::set<std::string> meta_data;
+    std::map<std::string ,variant_type> meta_data;
 
     if (doc.HasParseError()) {
         fprintf(stderr, "Error (offset %u): %s",
@@ -139,19 +152,16 @@ std::set<std::string> process_doc (rj::Document& doc, const char* json) {
     }
 
     if (doc.IsArray()) {
-        for (const auto& prop : doc.GetArray()) {
+        for (auto& prop : doc.GetArray()) {
             if (prop.IsObject()) {
-                for (const auto& key : prop.GetObject()) {
-                    std::string u_key {key.name.GetString()};
-                    std::transform(u_key.begin(), u_key.end(), u_key.begin(), ::toupper);
-                    meta_data.emplace(u_key);
+                for (auto& [key, val]: prop.GetObject()) {
+                    meta_data.emplace(key.GetString(), value_handler(val));
                 }
             }
         }
     } else if (doc.IsObject()) {
-        for (auto& key : doc.GetObject()) {
-            std::string u_key {key.name.GetString()};
-            std::transform(u_key.begin(), u_key.end(), u_key.begin(), ::toupper);
+        for (auto& [key, val] : doc.GetObject()) {
+            meta_data.emplace(key.GetString(), value_handler(val));
         }
     }
     return meta_data;
@@ -180,8 +190,8 @@ std::vector<char> file_Buffer (fs::path& path) {
 
 cpr::Response post_request(std::vector<char>& buff, fs::path& path) {
     fs::path file_Name = path.filename();
-    auto url {cpr::Url{"http://localhost:9998/rmeta/form/text"}};
-    auto buff_Size {cpr::Buffer{buff.begin(), buff.end(), file_Name}};
+    cpr::Url url {cpr::Url{"http://localhost:9998/rmeta/form/text"}};
+    cpr::Buffer buff_Size {cpr::Buffer{buff.begin(), buff.end(), file_Name}};
 
     // Set maxEmbeddedResources to 0 for parent object metadata only.
     auto header {cpr::Header{ {"maxEmbeddedResources", "0"},
@@ -200,45 +210,29 @@ cpr::Response post_request(std::vector<char>& buff, fs::path& path) {
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-std::set<std::string> keys {};
-std::set<std::string> path_handler(fs::path& path) {
+
+std::map<std::string, variant_type> path_handler(fs::path& path) {
     if (is_regular_file(path)) {
         std::vector<char> buff{file_Buffer(path)};
         std::string response { post_request(buff, path).text };
         rj::Document doc;
 
-        for (auto& key : process_doc(doc, response.c_str())) {
-            keys.emplace(key);
-        }
+        process_doc(doc, response.c_str());
 
     } else if (is_directory(path)) {
         for (auto &dir_entry: fs::recursive_directory_iterator(path)) {
             path_handler((fs::path &) dir_entry);
         }
     }
-    return keys;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void create_sets (std::vector<std::string>& core_keys, std::string& core_path, std::string& remaining_path) {
+void create_file (std::string& core_path, std::set<std::string>& key_list) {
     std::set<std::string> core_set;
-    std::set<std::string> remaining_set;
-    //Make case-insensitive for comparison.
-    std::set<std::string> u_set;
-    for (auto& key : keys) {
-        std::string ignore = "UNKNOWN";
-        if ((key.find(ignore) != std::string::npos) ) {
-            continue;
-        } else {
-            for (auto &c_key: core_keys) {
-                if (key.find(c_key) != std::string::npos) {
-                    core_set.emplace(key);
-                } else {
-                    remaining_set.emplace(key);
-                }
-            }
-        }
+
+    for (auto& key : key_list) {
+        core_set.emplace(key);
     }
     std::ofstream core_file(core_path);
 
@@ -247,14 +241,6 @@ void create_sets (std::vector<std::string>& core_keys, std::string& core_path, s
     }
 
     core_file.close();
-
-    std::ofstream remaining_file(remaining_path);
-
-    for (auto& key: remaining_set) {
-        remaining_file << key << std::endl;
-    }
-
-    remaining_file.close();
 
 }
 
@@ -279,8 +265,18 @@ int main(int argc,char* argv[]) {
                     << "code().message(): " << fs_error.code().message() << "\n"
                     << "code().category():" << fs_error.code().category().name() << "\n";
         }
-        //Creates global set meta_data.
-        path_handler(path);
+        //Creates vector of metadata key: value maps.
+        std::vector<std::map<std::string, variant_type>> meta_data {};
+        meta_data.emplace_back(path_handler(path));
+
+        //Access each map in the vector
+        for (const auto& map : meta_data) {
+            for (const auto& [key, value] : map) {
+                std::cout << key << ": ";
+                print_value((rapidjson::Value &) value);
+                std::cout << std::endl;
+            }
+        }
     }
     /*
       Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
@@ -292,18 +288,13 @@ int main(int argc,char* argv[]) {
       Included "AUTHOR",
      */
     std::vector<std::string> core_keys {
-        "AUTHOR", "ALTITUDE", "COMMENTS", "CONTRIBUTOR", "COVERAGE", "CREATED", "CREATOR", "CREATOR_TOOL", "DATE", "DC:",
-        "DC.", "DC_", "DCTERMS:", "DCTM:", "DESCRIPTION", "EMBEDDED_RELATIONSHIP_ID", "EMBEDDED_RESOURCE_PATH",
+        "AUTHOR", "ALTITUDE", "COMMENTS", "CONTRIBUTOR", "COVERAGE", "CREATED", "CREATOR", "CREATOR_TOOL", "DATE",
+        "DC:", "DC.", "DC_", "DCTERMS:", "DCTM:", "DESCRIPTION", "EMBEDDED_RELATIONSHIP_ID", "EMBEDDED_RESOURCE_PATH",
         "EMBEDDED_RESOURCE_TYPE", "HAS_SIGNATURE", "IDENTIFIER", "LANGUAGE", "LATITUDE", "LONGITUDE", "METADATA_DATE",
         "MODIFIED", "MODIFIER", "ORIGINAL_RESOURCE_NAME", "PRINT_DATE", "PROTECTED", "PUBLISHER", "RATING", "RELATION",
         "RESOURCE_NAME_KEY", "REVISION", "RIGHTS", "SOURCE", "SOURCE_PATH", "SUBJECT", "TITLE"
     };
 
-    std::string core_txt {"/home/xavier/Workspace/metaData/results/core_keys.txt"};
-    std::string remaining_txt {"/home/xavier/Workspace/metaData/results/remaining_keys.txt"};
-    create_sets(core_keys, core_txt, remaining_txt);
-
     return 0;
 }
 
-#pragma clang diagnostic pop
