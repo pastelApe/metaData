@@ -294,14 +294,6 @@ int main(int argc,char* argv[]) {
         std::vector<std::map<std::string, variant_type>> meta_data {};
         meta_data.emplace_back(path_handler(path));
 
-        //Access each map in the vector
-//        for (const auto& map : meta_data) {
-//            for (const auto& [key, value] : map) {
-//                std::cout << key << ": ";
-//                print_value((rapidjson::Value &) value);
-//                std::cout << std::endl;
-//            }
-//        }
     }
     /*
       Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.

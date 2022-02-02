@@ -23,10 +23,8 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="Printing values through value_handler function. Need to create proper printer of variant type values.">
-      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
+    <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="Value printer works on all rj::Value's.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -124,7 +122,7 @@
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="metaData" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metaData" TARGET_NAME="metaData" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metaData" RUN_TARGET_NAME="metaData">
+    <configuration name="metaData" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="~/workspace/projects/Test-Data/001/" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metaData" TARGET_NAME="metaData" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metaData" RUN_TARGET_NAME="metaData">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -211,7 +209,7 @@
       <workItem from="1643379805165" duration="14355000" />
       <workItem from="1643402746973" duration="1000" />
       <workItem from="1643828205329" duration="605000" />
-      <workItem from="1643830140029" duration="12108000" />
+      <workItem from="1643830140029" duration="12824000" />
     </task>
     <task id="LOCAL-00001" summary="Working on string comparison. Saving progress.">
       <created>1642180676848</created>
@@ -248,7 +246,14 @@
       <option name="project" value="LOCAL" />
       <updated>1643065480263</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Value printer works on all rj::Value's.">
+      <created>1643843888771</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1643843888772</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -275,7 +280,8 @@
     <MESSAGE value="path_handler function works. Used global set to store keys from the map of metadata properties." />
     <MESSAGE value="Add generated key file." />
     <MESSAGE value="Core set and Remaining set not working as intended. Need to remove prefix naming. Anything before last &quot;:&quot;." />
-    <option name="LAST_COMMIT_MESSAGE" value="Core set and Remaining set not working as intended. Need to remove prefix naming. Anything before last &quot;:&quot;." />
+    <MESSAGE value="Value printer works on all rj::Value's." />
+    <option name="LAST_COMMIT_MESSAGE" value="Value printer works on all rj::Value's." />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
