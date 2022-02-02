@@ -72,77 +72,94 @@ public:
 };
 
 /*--------------------------------------------------------------------------------------------------------------------*/
-void print_value(rj::Value& val) {
-    Type_Handler val_type;
-    val.Accept(val_type);
 
-    std::string value{};
-
-    switch (val.GetType()) {
-        case rj::kNullType :
-            std::cout << "Null";
-            break;
-        case rj::kFalseType :
-        case rj::kTrueType :
-            std::cout << std::boolalpha << val.GetBool();
-            break;
-        case rj::kNumberType :
-
-            if (val.IsUint64()) {
-                std::cout << val.GetUint64();
-            } else if (val.IsInt64()) {
-                std::cout << val.GetInt64();
-            } else {
-                std::cout << val.GetDouble();
-            }
-            break;
-        case rj::kStringType :
-            std::cout << val.GetString();
-        case rj::kArrayType :
-            std::cout << "[ ";
-            for (auto& v : val.GetArray()) {
-                print_value(v);
-                std::cout << ", ";
-            }
-            std::cout << " ]";
-            break;
-        case rj::kObjectType :
-            for (auto& obj_v : val.GetObject()) {
-                std::cout << "{ ";
-                print_value((rj::Value &)obj_v);
-            }
-            break;
+class GetString_Visitor
+    : public boost::static_visitor<std::string>
+{
+public:
+    std::string operator() (rj::Value& val) {
+        std::ostringstream s;
+        switch (val.GetType()) {
+            case rj::kNullType :
+                s << "Null";
+                break;
+            case rj::kFalseType :
+            case rj::kTrueType :
+                s << std::boolalpha << val.GetBool();
+                break;
+            case rj::kNumberType :
+                if (val.IsUint64()) {
+                    s << val.GetUint64();
+                } else if (val.IsInt64()) {
+                    s << val.GetInt64();
+                } else if (val.IsDouble()) {
+                    s << val.GetDouble();
+                }
+                break;
+            case rj::kStringType :
+                s << val.GetString();
+                break;
+            case rj::kObjectType :
+            case rj::kArrayType :
+                break;
+        }
+        std::string ss {s.str()};
+        boost::trim(ss);
+        return ss;
     }
-}
+};
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 //value_handler is a recursive function. Checks all values including child objects and arrays.
-variant_type value_handler(const rj::Value& val) {
+variant_type value_handler(rj::Value& val) {
+    GetString_Visitor print_str;
+
     if (val.IsObject()) {
         std::map<std::string, variant_type> map;
-        for (const auto& [obj_key, obj_val] : val.GetObject()) {
+
+        std::cout << "{ ";
+        for (auto& [obj_key, obj_val] : val.GetObject()) {
+            std::cout << obj_key.GetString() << ": " << print_str(obj_val);;
             map.emplace(obj_key.GetString(), value_handler(obj_val));
+
         }
+        std::cout << " }" << std::endl;
+
         return map;
-    } else if (val.IsArray()) {
+    }
+    else if (val.IsArray()) {
+        // To remove comma from printing after last value in array, subtract 1.
+        unsigned int array_Size = val.Size() - 1;
         std::vector<variant_type> vec;
-        for (const auto& arr_value: val.GetArray()) {
+
+        std::cout << "[ ";
+        for (auto& arr_value: val.GetArray()) {
+            std::cout <<  print_str(arr_value);
             vec.push_back(value_handler(arr_value));
+
+            if (array_Size > 0) {
+                --array_Size;
+                std::cout << ", ";
+            }
         }
+        std::cout << " ]" << std::endl;
+
         return vec;
-    } else {
+    }
+    else {
         Type_Handler val_type;
         val.Accept(val_type);
+        std::cout << print_str(val);
         return val_type.get_value();
     }
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-std::map<std::string ,variant_type> process_doc (rj::Document& doc, const char* json) {
-    doc.Parse(json);
+std::map<std::string ,variant_type> process_doc (rj::Document& doc) {
     std::map<std::string ,variant_type> meta_data;
+    GetString_Visitor print_str;
 
     if (doc.HasParseError()) {
         fprintf(stderr, "Error (offset %u): %s",
@@ -155,13 +172,17 @@ std::map<std::string ,variant_type> process_doc (rj::Document& doc, const char* 
         for (auto& prop : doc.GetArray()) {
             if (prop.IsObject()) {
                 for (auto& [key, val]: prop.GetObject()) {
+                    std::cout << key.GetString() << ": ";
                     meta_data.emplace(key.GetString(), value_handler(val));
+                    std::cout << "\n" << std::endl;
                 }
             }
         }
     } else if (doc.IsObject()) {
         for (auto& [key, val] : doc.GetObject()) {
+            std::cout << key.GetString() << ": ";
             meta_data.emplace(key.GetString(), value_handler(val));
+            std::cout << "\n" << std::endl;
         }
     }
     return meta_data;
@@ -208,22 +229,26 @@ cpr::Response post_request(std::vector<char>& buff, fs::path& path) {
 
     return response;
 }
+
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 
 std::map<std::string, variant_type> path_handler(fs::path& path) {
-    if (is_regular_file(path)) {
-        std::vector<char> buff{file_Buffer(path)};
-        std::string response { post_request(buff, path).text };
-        rj::Document doc;
-
-        process_doc(doc, response.c_str());
-
-    } else if (is_directory(path)) {
+    std::map<std::string, variant_type> map {};
+    if (is_directory(path)) {
         for (auto &dir_entry: fs::recursive_directory_iterator(path)) {
             path_handler((fs::path &) dir_entry);
         }
     }
+    else if (is_regular_file(path)) {
+        std::vector<char> buff{file_Buffer(path)};
+        std::string response { post_request(buff, path).text };
+        rj::Document doc;
+
+        doc.Parse(response.c_str());
+        map = process_doc(doc);
+    }
+    return map;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -270,13 +295,13 @@ int main(int argc,char* argv[]) {
         meta_data.emplace_back(path_handler(path));
 
         //Access each map in the vector
-        for (const auto& map : meta_data) {
-            for (const auto& [key, value] : map) {
-                std::cout << key << ": ";
-                print_value((rapidjson::Value &) value);
-                std::cout << std::endl;
-            }
-        }
+//        for (const auto& map : meta_data) {
+//            for (const auto& [key, value] : map) {
+//                std::cout << key << ": ";
+//                print_value((rapidjson::Value &) value);
+//                std::cout << std::endl;
+//            }
+//        }
     }
     /*
       Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
@@ -294,7 +319,6 @@ int main(int argc,char* argv[]) {
         "MODIFIED", "MODIFIER", "ORIGINAL_RESOURCE_NAME", "PRINT_DATE", "PROTECTED", "PUBLISHER", "RATING", "RELATION",
         "RESOURCE_NAME_KEY", "REVISION", "RIGHTS", "SOURCE", "SOURCE_PATH", "SUBJECT", "TITLE"
     };
-
     return 0;
 }
 
