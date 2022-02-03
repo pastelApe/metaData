@@ -23,8 +23,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="remove old code.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="rename variables to readable names. Implement rapidjson writer to compare to custom print function.">
       <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -209,7 +208,7 @@
       <workItem from="1643379805165" duration="14355000" />
       <workItem from="1643402746973" duration="1000" />
       <workItem from="1643828205329" duration="605000" />
-      <workItem from="1643830140029" duration="16241000" />
+      <workItem from="1643830140029" duration="16373000" />
     </task>
     <task id="LOCAL-00001" summary="Working on string comparison. Saving progress.">
       <created>1642180676848</created>
@@ -260,7 +259,14 @@
       <option name="project" value="LOCAL" />
       <updated>1643844507149</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="rename variables to readable names. Implement rapidjson writer to compare to custom print function.">
+      <created>1643908325824</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1643908325825</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -289,7 +295,8 @@
     <MESSAGE value="Core set and Remaining set not working as intended. Need to remove prefix naming. Anything before last &quot;:&quot;." />
     <MESSAGE value="Value printer works on all rj::Value's." />
     <MESSAGE value="remove old code." />
-    <option name="LAST_COMMIT_MESSAGE" value="remove old code." />
+    <MESSAGE value="rename variables to readable names. Implement rapidjson writer to compare to custom print function." />
+    <option name="LAST_COMMIT_MESSAGE" value="rename variables to readable names. Implement rapidjson writer to compare to custom print function." />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

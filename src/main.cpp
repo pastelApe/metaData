@@ -113,8 +113,8 @@ public:
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-//value_handler is a recursive function. Checks all values including child objects and arrays.
-variant_Value_Type value_handler(rj::Value& value) {
+//Value_Handler is a recursive function. Checks all values including child objects and arrays.
+variant_Value_Type Value_Handler(rj::Value& value) {
     GetString_Visitor print_String;
 
     if (value.IsObject()) {
@@ -123,7 +123,7 @@ variant_Value_Type value_handler(rj::Value& value) {
         std::cout << "{ ";
         for (auto& [object_key, object_value] : value.GetObject()) {
             std::cout << object_key.GetString() << ": " << print_String(object_value);;
-            object_Map.emplace(object_key.GetString(), value_handler(object_value));
+            object_Map.emplace(object_key.GetString(), Value_Handler(object_value));
 
         }
         std::cout << " }" << std::endl;
@@ -138,7 +138,7 @@ variant_Value_Type value_handler(rj::Value& value) {
         std::cout << "[ ";
         for (auto& array_value: value.GetArray()) {
             std::cout <<  print_String(array_value);
-            value_Array.push_back(value_handler(array_value));
+            value_Array.push_back(Value_Handler(array_value));
 
             if (array_Size > 0) {
                 --array_Size;
@@ -159,7 +159,7 @@ variant_Value_Type value_handler(rj::Value& value) {
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-std::map<std::string ,variant_Value_Type> Process_Doc (rj::Document& document) {
+std::map<std::string ,variant_Value_Type> Process_Document (rj::Document& document) {
     std::map<std::string ,variant_Value_Type> meta_data;
     GetString_Visitor print_String;
 
@@ -175,7 +175,7 @@ std::map<std::string ,variant_Value_Type> Process_Doc (rj::Document& document) {
             if (prop.IsObject()) {
                 for (auto& [key, value]: prop.GetObject()) {
                     std::cout << key.GetString() << ": ";
-                    meta_data.emplace(key.GetString(), value_handler(value));
+                    meta_data.emplace(key.GetString(), Value_Handler(value));
                     std::cout << "\n" << std::endl;
                 }
             }
@@ -183,7 +183,7 @@ std::map<std::string ,variant_Value_Type> Process_Doc (rj::Document& document) {
     } else if (document.IsObject()) {
         for (auto& [key, value] : document.GetObject()) {
             std::cout << key.GetString() << ": ";
-            meta_data.emplace(key.GetString(), value_handler(value));
+            meta_data.emplace(key.GetString(), Value_Handler(value));
             std::cout << "\n" << std::endl;
         }
     }
@@ -248,7 +248,7 @@ std::map<std::string, variant_Value_Type> path_handler(fs::path& path) {
         rj::Document document;
 
         document.Parse(response.c_str());
-        map = Process_Doc(document);
+        map = Process_Document(document);
     }
     return map;
 }
