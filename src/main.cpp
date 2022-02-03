@@ -21,6 +21,8 @@
 #include "rapidjson/error/en.h"
 #include "rapidjson/reader.h"
 #include "rapidjson/stringbuffer.h"
+#include "rapidjson/prettywriter.h"
+
 
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -73,7 +75,7 @@ public:
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-class GetString_Visitor
+class Get_String_Visitor
     : public boost::static_visitor<std::string>
 {
 public:
@@ -115,44 +117,33 @@ public:
 
 //Value_Handler is a recursive function. Checks all values including child objects and arrays.
 variant_Value_Type Value_Handler(rj::Value& value) {
-    GetString_Visitor print_String;
+    Get_String_Visitor print_String;
 
     if (value.IsObject()) {
         std::map<std::string, variant_Value_Type> object_Map;
 
-        std::cout << "{ ";
+
         for (auto& [object_key, object_value] : value.GetObject()) {
-            std::cout << object_key.GetString() << ": " << print_String(object_value);;
             object_Map.emplace(object_key.GetString(), Value_Handler(object_value));
 
         }
-        std::cout << " }" << std::endl;
 
         return object_Map;
     }
     else if (value.IsArray()) {
-        // To remove comma from printing after last valueue in array, subtract 1.
+        // To remove comma from printing after last value in array, subtract 1.
         unsigned int array_Size = value.Size() - 1;
         std::vector<variant_Value_Type> value_Array;
 
-        std::cout << "[ ";
         for (auto& array_value: value.GetArray()) {
-            std::cout <<  print_String(array_value);
             value_Array.push_back(Value_Handler(array_value));
-
-            if (array_Size > 0) {
-                --array_Size;
-                std::cout << ", ";
-            }
         }
-        std::cout << " ]" << std::endl;
 
         return value_Array;
     }
     else {
         Type_Handler value_Handler;
         value.Accept(value_Handler);
-        std::cout << print_String(value);
         return value_Handler.Get_Value();
     }
 }
@@ -160,39 +151,35 @@ variant_Value_Type Value_Handler(rj::Value& value) {
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 std::map<std::string ,variant_Value_Type> Process_Document (rj::Document& document) {
-    std::map<std::string ,variant_Value_Type> meta_data;
-    GetString_Visitor print_String;
+    std::map<std::string ,variant_Value_Type> meta_Data;
+    Get_String_Visitor print_String;
 
     if (document.HasParseError()) {
         fprintf(stderr, "Error (offset %u): %s",
                 (unsigned)document.GetErrorOffset(),
                 rj::GetParseError_En(document.GetParseError()));
-        std::cout << std::endl;
+                std::cout << std::endl;
     }
 
     if (document.IsArray()) {
         for (auto& prop : document.GetArray()) {
             if (prop.IsObject()) {
                 for (auto& [key, value]: prop.GetObject()) {
-                    std::cout << key.GetString() << ": ";
-                    meta_data.emplace(key.GetString(), Value_Handler(value));
-                    std::cout << "\n" << std::endl;
+                    meta_Data.emplace(key.GetString(), Value_Handler(value));
                 }
             }
         }
     } else if (document.IsObject()) {
         for (auto& [key, value] : document.GetObject()) {
-            std::cout << key.GetString() << ": ";
-            meta_data.emplace(key.GetString(), Value_Handler(value));
-            std::cout << "\n" << std::endl;
+            meta_Data.emplace(key.GetString(), Value_Handler(value));
         }
     }
-    return meta_data;
+    return meta_Data;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-std::vector<char> file_Buffer (fs::path& path) {
+std::vector<char> File_Buffer (fs::path& path) {
     //Open the file.
     std::ifstream stream {path.string()};
 
@@ -211,7 +198,7 @@ std::vector<char> file_Buffer (fs::path& path) {
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-cpr::Response post_request(std::vector<char>& buffer, fs::path& path) {
+cpr::Response Post_Request(std::vector<char>& buffer, fs::path& path) {
     fs::path file_Name = path.filename();
     cpr::Url url {cpr::Url{"http://localhost:9998/rmeta/form/text"}};
     cpr::Buffer buffer_Size {cpr::Buffer{buffer.begin(), buffer.end(), file_Name}};
@@ -235,27 +222,33 @@ cpr::Response post_request(std::vector<char>& buffer, fs::path& path) {
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 
-std::map<std::string, variant_Value_Type> path_handler(fs::path& path) {
+std::map<std::string, variant_Value_Type> Path_Handler(fs::path& path) {
     std::map<std::string, variant_Value_Type> map {};
     if (is_directory(path)) {
         for (auto &directory_entry: fs::recursive_directory_iterator(path)) {
-            path_handler((fs::path &) directory_entry);
+            Path_Handler((fs::path &) directory_entry);
         }
     }
     else if (is_regular_file(path)) {
-        std::vector<char> buffer{file_Buffer(path)};
-        std::string response { post_request(buffer, path).text };
+        std::vector<char> buffer{File_Buffer(path)};
+        std::string response { Post_Request(buffer, path).text };
         rj::Document document;
 
         document.Parse(response.c_str());
         map = Process_Document(document);
+
+        rj::StringBuffer rj_Buffer;
+        rj::PrettyWriter<rj::StringBuffer> writer (rj_Buffer);
+        document.Accept(writer.SetFormatOptions(rapidjson::kFormatSingleLineArray));
+        const char* output = rj_Buffer.GetString();
+        std::cout << output << std::endl;
     }
     return map;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void create_file (std::string& path, std::set<std::string>& master_set) {
+void Create_File (std::string& path, std::set<std::string>& master_set) {
     std::set<std::string> core_Set;
 
     for (auto& key : master_set) {
@@ -293,8 +286,8 @@ int main(int argc,char* argv[]) {
                     << "code().category():" << fs_error.code().category().name() << "\n";
         }
         //Creates vector of metadata key: value maps.
-        std::vector<std::map<std::string, variant_Value_Type>> meta_data {};
-        meta_data.emplace_back(path_handler(path));
+        std::vector<std::map<std::string, variant_Value_Type>> meta_Data {};
+        meta_Data.emplace_back(Path_Handler(path));
 
     }
     /*
