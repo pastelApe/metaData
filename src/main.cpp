@@ -37,16 +37,16 @@ typedef boost::make_recursive_variant<
         double,
         std::string,
         std::vector<boost::recursive_variant_>,
-        std::map<std::string, boost::recursive_variant_>>::type variant_type;
+        std::map<std::string, boost::recursive_variant_>>::type variant_Value_Type;
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 struct Type_Handler : public rj::BaseReaderHandler<rj::UTF8<>, Type_Handler> {
 private:
-    variant_type _props;
+    variant_Value_Type _props;
 public:
     // && is normally only used to declare a parameter of a function. And it only takes an r-value expression.
-    variant_type&& get_value() {
+    variant_Value_Type&& Get_Value() {
         return std::move(_props);
     }
 
@@ -77,27 +77,29 @@ class GetString_Visitor
     : public boost::static_visitor<std::string>
 {
 public:
-    std::string operator() (rj::Value& val) {
+    std::string operator() (rj::Value& value) {
         std::ostringstream s;
-        switch (val.GetType()) {
+        switch (value.GetType()) {
             case rj::kNullType :
                 s << "Null";
                 break;
             case rj::kFalseType :
             case rj::kTrueType :
-                s << std::boolalpha << val.GetBool();
+                s << value.GetBool();
                 break;
             case rj::kNumberType :
-                if (val.IsUint64()) {
-                    s << val.GetUint64();
-                } else if (val.IsInt64()) {
-                    s << val.GetInt64();
-                } else if (val.IsDouble()) {
-                    s << val.GetDouble();
+                if (value.IsUint64()) {
+                    s << value.GetUint64();
+                } 
+                else if (value.IsInt64()) {
+                    s << value.GetInt64();
+                } 
+                else if (value.IsDouble()) {
+                    s << value.GetDouble();
                 }
                 break;
             case rj::kStringType :
-                s << val.GetString();
+                s << value.GetString();
                 break;
             case rj::kObjectType :
             case rj::kArrayType :
@@ -112,31 +114,31 @@ public:
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 //value_handler is a recursive function. Checks all values including child objects and arrays.
-variant_type value_handler(rj::Value& val) {
-    GetString_Visitor print_str;
+variant_Value_Type value_handler(rj::Value& value) {
+    GetString_Visitor print_String;
 
-    if (val.IsObject()) {
-        std::map<std::string, variant_type> map;
+    if (value.IsObject()) {
+        std::map<std::string, variant_Value_Type> object_Map;
 
         std::cout << "{ ";
-        for (auto& [obj_key, obj_val] : val.GetObject()) {
-            std::cout << obj_key.GetString() << ": " << print_str(obj_val);;
-            map.emplace(obj_key.GetString(), value_handler(obj_val));
+        for (auto& [object_key, object_value] : value.GetObject()) {
+            std::cout << object_key.GetString() << ": " << print_String(object_value);;
+            object_Map.emplace(object_key.GetString(), value_handler(object_value));
 
         }
         std::cout << " }" << std::endl;
 
-        return map;
+        return object_Map;
     }
-    else if (val.IsArray()) {
-        // To remove comma from printing after last value in array, subtract 1.
-        unsigned int array_Size = val.Size() - 1;
-        std::vector<variant_type> vec;
+    else if (value.IsArray()) {
+        // To remove comma from printing after last valueue in array, subtract 1.
+        unsigned int array_Size = value.Size() - 1;
+        std::vector<variant_Value_Type> value_Array;
 
         std::cout << "[ ";
-        for (auto& arr_value: val.GetArray()) {
-            std::cout <<  print_str(arr_value);
-            vec.push_back(value_handler(arr_value));
+        for (auto& array_value: value.GetArray()) {
+            std::cout <<  print_String(array_value);
+            value_Array.push_back(value_handler(array_value));
 
             if (array_Size > 0) {
                 --array_Size;
@@ -145,43 +147,43 @@ variant_type value_handler(rj::Value& val) {
         }
         std::cout << " ]" << std::endl;
 
-        return vec;
+        return value_Array;
     }
     else {
-        Type_Handler val_type;
-        val.Accept(val_type);
-        std::cout << print_str(val);
-        return val_type.get_value();
+        Type_Handler value_Handler;
+        value.Accept(value_Handler);
+        std::cout << print_String(value);
+        return value_Handler.Get_Value();
     }
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-std::map<std::string ,variant_type> process_doc (rj::Document& doc) {
-    std::map<std::string ,variant_type> meta_data;
-    GetString_Visitor print_str;
+std::map<std::string ,variant_Value_Type> Process_Doc (rj::Document& document) {
+    std::map<std::string ,variant_Value_Type> meta_data;
+    GetString_Visitor print_String;
 
-    if (doc.HasParseError()) {
+    if (document.HasParseError()) {
         fprintf(stderr, "Error (offset %u): %s",
-                (unsigned)doc.GetErrorOffset(),
-                rj::GetParseError_En(doc.GetParseError()));
+                (unsigned)document.GetErrorOffset(),
+                rj::GetParseError_En(document.GetParseError()));
         std::cout << std::endl;
     }
 
-    if (doc.IsArray()) {
-        for (auto& prop : doc.GetArray()) {
+    if (document.IsArray()) {
+        for (auto& prop : document.GetArray()) {
             if (prop.IsObject()) {
-                for (auto& [key, val]: prop.GetObject()) {
+                for (auto& [key, value]: prop.GetObject()) {
                     std::cout << key.GetString() << ": ";
-                    meta_data.emplace(key.GetString(), value_handler(val));
+                    meta_data.emplace(key.GetString(), value_handler(value));
                     std::cout << "\n" << std::endl;
                 }
             }
         }
-    } else if (doc.IsObject()) {
-        for (auto& [key, val] : doc.GetObject()) {
+    } else if (document.IsObject()) {
+        for (auto& [key, value] : document.GetObject()) {
             std::cout << key.GetString() << ": ";
-            meta_data.emplace(key.GetString(), value_handler(val));
+            meta_data.emplace(key.GetString(), value_handler(value));
             std::cout << "\n" << std::endl;
         }
     }
@@ -199,27 +201,27 @@ std::vector<char> file_Buffer (fs::path& path) {
         std::exit(1);
     }
 
-    std::vector<char> buff {
+    std::vector<char> buffer {
             std::istreambuf_iterator<char>(stream),
             std::istreambuf_iterator<char>()
     };
 
-    return buff;
+    return buffer;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-cpr::Response post_request(std::vector<char>& buff, fs::path& path) {
+cpr::Response post_request(std::vector<char>& buffer, fs::path& path) {
     fs::path file_Name = path.filename();
     cpr::Url url {cpr::Url{"http://localhost:9998/rmeta/form/text"}};
-    cpr::Buffer buff_Size {cpr::Buffer{buff.begin(), buff.end(), file_Name}};
+    cpr::Buffer buffer_Size {cpr::Buffer{buffer.begin(), buffer.end(), file_Name}};
 
     // Set maxEmbeddedResources to 0 for parent object metadata only.
     auto header {cpr::Header{ {"maxEmbeddedResources", "0"},
                               {"X-Tika-OCRskipOcr", "true"},
                               {"accept", "application/json"}}};
 
-    cpr::Response response {cpr::Post(url, header, cpr::Multipart{{file_Name, buff_Size}})};
+    cpr::Response response {cpr::Post(url, header, cpr::Multipart{{file_Name, buffer_Size}})};
 
     if (response.status_code != 200) {
         std::cout << "Failed to processes request. Error code: "
@@ -233,39 +235,39 @@ cpr::Response post_request(std::vector<char>& buff, fs::path& path) {
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 
-std::map<std::string, variant_type> path_handler(fs::path& path) {
-    std::map<std::string, variant_type> map {};
+std::map<std::string, variant_Value_Type> path_handler(fs::path& path) {
+    std::map<std::string, variant_Value_Type> map {};
     if (is_directory(path)) {
-        for (auto &dir_entry: fs::recursive_directory_iterator(path)) {
-            path_handler((fs::path &) dir_entry);
+        for (auto &directory_entry: fs::recursive_directory_iterator(path)) {
+            path_handler((fs::path &) directory_entry);
         }
     }
     else if (is_regular_file(path)) {
-        std::vector<char> buff{file_Buffer(path)};
-        std::string response { post_request(buff, path).text };
-        rj::Document doc;
+        std::vector<char> buffer{file_Buffer(path)};
+        std::string response { post_request(buffer, path).text };
+        rj::Document document;
 
-        doc.Parse(response.c_str());
-        map = process_doc(doc);
+        document.Parse(response.c_str());
+        map = Process_Doc(document);
     }
     return map;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void create_file (std::string& core_path, std::set<std::string>& key_list) {
-    std::set<std::string> core_set;
+void create_file (std::string& path, std::set<std::string>& master_set) {
+    std::set<std::string> core_Set;
 
-    for (auto& key : key_list) {
-        core_set.emplace(key);
+    for (auto& key : master_set) {
+        core_Set.emplace(key);
     }
-    std::ofstream core_file(core_path);
+    std::ofstream file(path);
 
-    for (auto& key: core_set) {
-        core_file << key << std::endl;
+    for (auto& key: core_Set) {
+        file << key << std::endl;
     }
 
-    core_file.close();
+    file.close();
 
 }
 
@@ -291,7 +293,7 @@ int main(int argc,char* argv[]) {
                     << "code().category():" << fs_error.code().category().name() << "\n";
         }
         //Creates vector of metadata key: value maps.
-        std::vector<std::map<std::string, variant_type>> meta_data {};
+        std::vector<std::map<std::string, variant_Value_Type>> meta_data {};
         meta_data.emplace_back(path_handler(path));
 
     }
