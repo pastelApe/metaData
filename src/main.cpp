@@ -87,7 +87,7 @@ public:
                 break;
             case rj::kFalseType :
             case rj::kTrueType :
-                s << value.GetBool();
+                s << std::boolalpha << value.GetBool();
                 break;
             case rj::kNumberType :
                 if (value.IsUint64()) {
@@ -120,34 +120,43 @@ variant_Value_Type Value_Handler(rj::Value& value) {
     Get_String_Visitor print_String;
 
     if (value.IsObject()) {
-        std::map<std::string, variant_Value_Type> object_Map;
+        std::map<std::string, variant_Value_Type> map;
 
-
-        for (auto& [object_key, object_value] : value.GetObject()) {
-            object_Map.emplace(object_key.GetString(), Value_Handler(object_value));
+        std::cout << "{ ";
+        for (auto& [obj_key, obj_val] : value.GetObject()) {
+            std::cout << obj_key.GetString() << ": ";
+            map.emplace(obj_key.GetString(), Value_Handler(obj_val));
 
         }
+        std::cout << " }";
 
-        return object_Map;
+        return map;
     }
     else if (value.IsArray()) {
         // To remove comma from printing after last value in array, subtract 1.
         unsigned int array_Size = value.Size() - 1;
-        std::vector<variant_Value_Type> value_Array;
+        std::vector<variant_Value_Type> vec;
 
-        for (auto& array_value: value.GetArray()) {
-            value_Array.push_back(Value_Handler(array_value));
+        std::cout << "[ ";
+        for (auto& arr_value: value.GetArray()) {
+            vec.push_back(Value_Handler(arr_value));
+
+            if (array_Size > 0) {
+                --array_Size;
+                std::cout << ", ";
+            }
         }
+        std::cout << " ]";
 
-        return value_Array;
+        return vec;
     }
     else {
-        Type_Handler value_Handler;
-        value.Accept(value_Handler);
-        return value_Handler.Get_Value();
+        Type_Handler val_type;
+        value.Accept(val_type);
+        std::cout << print_String(value);
+        return val_type.Get_Value();
     }
 }
-
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 std::map<std::string ,variant_Value_Type> Process_Document (rj::Document& document) {
@@ -158,20 +167,24 @@ std::map<std::string ,variant_Value_Type> Process_Document (rj::Document& docume
         fprintf(stderr, "Error (offset %u): %s",
                 (unsigned)document.GetErrorOffset(),
                 rj::GetParseError_En(document.GetParseError()));
-                std::cout << std::endl;
+        std::cout << std::endl;
     }
 
     if (document.IsArray()) {
         for (auto& prop : document.GetArray()) {
             if (prop.IsObject()) {
-                for (auto& [key, value]: prop.GetObject()) {
-                    meta_Data.emplace(key.GetString(), Value_Handler(value));
+                for (auto& [key, val]: prop.GetObject()) {
+                    std::cout << key.GetString() << ": ";
+                    meta_Data.emplace(key.GetString(), Value_Handler(val));
+                    std::cout << std::endl;
                 }
             }
         }
     } else if (document.IsObject()) {
-        for (auto& [key, value] : document.GetObject()) {
-            meta_Data.emplace(key.GetString(), Value_Handler(value));
+        for (auto& [key, val] : document.GetObject()) {
+            std::cout << key.GetString() << ": ";
+            meta_Data.emplace(key.GetString(), Value_Handler(val));
+            std::cout << std::endl;
         }
     }
     return meta_Data;
@@ -179,117 +192,40 @@ std::map<std::string ,variant_Value_Type> Process_Document (rj::Document& docume
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-std::vector<char> File_Buffer (fs::path& path) {
-    //Open the file.
-    std::ifstream stream {path.string()};
-
-    if (!stream.is_open()) {
-        std::cerr << "Could not open file for reading!" << "\n";
-        std::exit(1);
-    }
-
-    std::vector<char> buffer {
-            std::istreambuf_iterator<char>(stream),
-            std::istreambuf_iterator<char>()
-    };
-
-    return buffer;
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-cpr::Response Post_Request(std::vector<char>& buffer, fs::path& path) {
-    fs::path file_Name = path.filename();
-    cpr::Url url {cpr::Url{"http://localhost:9998/rmeta/form/text"}};
-    cpr::Buffer buffer_Size {cpr::Buffer{buffer.begin(), buffer.end(), file_Name}};
-
-    // Set maxEmbeddedResources to 0 for parent object metadata only.
-    auto header {cpr::Header{ {"maxEmbeddedResources", "0"},
-                              {"X-Tika-OCRskipOcr", "true"},
-                              {"accept", "application/json"}}};
-
-    cpr::Response response {cpr::Post(url, header, cpr::Multipart{{file_Name, buffer_Size}})};
-
-    if (response.status_code != 200) {
-        std::cout << "Failed to processes request. Error code: "
-                  << response.status_code << ". \n"
-                  << "Failed Path: " << path.relative_path() << "\n";
-    }
-
-    return response;
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-
-std::map<std::string, variant_Value_Type> Path_Handler(fs::path& path) {
+std::map<std::string, variant_Value_Type> Json_Handler() {
     std::map<std::string, variant_Value_Type> map {};
-    if (is_directory(path)) {
-        for (auto &directory_entry: fs::recursive_directory_iterator(path)) {
-            Path_Handler((fs::path &) directory_entry);
-        }
-    }
-    else if (is_regular_file(path)) {
-        std::vector<char> buffer{File_Buffer(path)};
-        std::string response { Post_Request(buffer, path).text };
-        rj::Document document;
 
-        document.Parse(response.c_str());
+        rj::Document document;
+        const char* json = "[\n{\"author\": \"Xavier\","
+                           "\"Author\": \"Casey\","
+                           "\"creator\": \"Xavier\","
+                           "\"Created-By\": [\"Xavier\", \"Casey\"],"
+                           "\"hello\": \"world\","
+                           "\"true\": true,"
+                           "\"false\": false,"
+                           "\"null\": null,"
+                           "\"int64\": 123,"
+                           "\"uint64\": 123456,"
+                           "\"pi\": 3.1416,"
+                           "\"array\": [1, 2, 3, 4],"
+                           "\"nested::array\": [\"This\", \"is\", \"level\", 1, \".\","
+                           "[\"This\", \"is\", \"level\", 2, \".\"]],"
+                           "\"nested::object\":{\"level2\": {\"level3\": \"sub-value\"}}}\n]";
+        document.Parse(json);
         map = Process_Document(document);
 
-        rj::StringBuffer rj_Buffer;
-        rj::PrettyWriter<rj::StringBuffer> writer (rj_Buffer);
-        document.Accept(writer.SetFormatOptions(rapidjson::kFormatSingleLineArray));
-        const char* output = rj_Buffer.GetString();
-        std::cout << output << std::endl;
-    }
     return map;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-void Create_File (std::string& path, std::set<std::string>& master_set) {
-    std::set<std::string> core_Set;
-
-    for (auto& key : master_set) {
-        core_Set.emplace(key);
-    }
-    std::ofstream file(path);
-
-    for (auto& key: core_Set) {
-        file << key << std::endl;
-    }
-
-    file.close();
-
-}
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-int main(int argc,char* argv[]) {
-    //If a path is not passed via CLI.
-    if (argc != 2) {
-        std::cout << "Please enter a valid path." << std::endl;
-        return 1;
-    } else {
-        fs::path path { argv[1] };
-        try {
-            fs::exists(path);
-        }
-        catch (fs::filesystem_error const &fs_error) {
-            std::cout
-                    << "what(): " << fs_error.what() << "\n"
-                    << "path1():" << fs_error.path1() << "\n"
-                    << "path2():" << fs_error.path2() << "\n"
-                    << "code().value():   " << fs_error.code().value() << "\n"
-                    << "code().message(): " << fs_error.code().message() << "\n"
-                    << "code().category():" << fs_error.code().category().name() << "\n";
-        }
+int main() {
         //Creates vector of metadata key: value maps.
+        Get_String_Visitor print_Value;
         std::vector<std::map<std::string, variant_Value_Type>> meta_Data {};
-        meta_Data.emplace_back(Path_Handler(path));
+        meta_Data.emplace_back(Json_Handler());
 
-    }
+
     /*
       Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
       This set also includes the Dublin Core properties as well as properties found from custom fields that
