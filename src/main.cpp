@@ -10,8 +10,8 @@
 #include <vector>
 
 //Boost
-#include "boost/variant.hpp"
 #include "boost/algorithm/string.hpp"
+#include "boost/variant.hpp"
 
 //C++ Requests: Curl for People
 #include "cpr/cpr.h"
@@ -39,16 +39,16 @@ typedef boost::make_recursive_variant<
         double,
         std::string,
         std::vector<boost::recursive_variant_>,
-        std::map<std::string, boost::recursive_variant_>>::type variant_Value_Type;
+        std::map<std::string, boost::recursive_variant_>>::type Variant_Data;
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 struct Type_Handler : public rj::BaseReaderHandler<rj::UTF8<>, Type_Handler> {
 private:
-    variant_Value_Type _props;
+    Variant_Data _props;
 public:
     // && is normally only used to declare a parameter of a function. And it only takes an r-value expression.
-    variant_Value_Type&& Get_Value() {
+    Variant_Data&& Get_Value() {
         return std::move(_props);
     }
 
@@ -116,51 +116,36 @@ public:
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 //Value_Handler is a recursive function. Checks all values including child objects and arrays.
-variant_Value_Type Value_Handler(rj::Value& value) {
+Variant_Data Value_Handler(rj::Value& value) {
     Get_String_Visitor print_String;
 
     if (value.IsObject()) {
-        std::map<std::string, variant_Value_Type> map;
-
-        std::cout << "{ ";
+        std::map<std::string, Variant_Data> map;
         for (auto& [obj_key, obj_val] : value.GetObject()) {
-            std::cout << obj_key.GetString() << ": ";
             map.emplace(obj_key.GetString(), Value_Handler(obj_val));
 
         }
-        std::cout << " }";
-
         return map;
     }
     else if (value.IsArray()) {
         // To remove comma from printing after last value in array, subtract 1.
-        unsigned int array_Size = value.Size() - 1;
-        std::vector<variant_Value_Type> vec;
-
-        std::cout << "[ ";
+        std::vector<Variant_Data> vec;
         for (auto& arr_value: value.GetArray()) {
             vec.push_back(Value_Handler(arr_value));
-
-            if (array_Size > 0) {
-                --array_Size;
-                std::cout << ", ";
-            }
         }
-        std::cout << " ]";
 
         return vec;
     }
     else {
         Type_Handler val_type;
         value.Accept(val_type);
-        std::cout << print_String(value);
         return val_type.Get_Value();
     }
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-std::map<std::string ,variant_Value_Type> Process_Document (rj::Document& document) {
-    std::map<std::string ,variant_Value_Type> meta_Data;
+std::map<std::string ,Variant_Data> Process_Document (rj::Document& document) {
+    std::map<std::string ,Variant_Data> meta_Data;
     Get_String_Visitor print_String;
 
     if (document.HasParseError()) {
@@ -174,17 +159,13 @@ std::map<std::string ,variant_Value_Type> Process_Document (rj::Document& docume
         for (auto& prop : document.GetArray()) {
             if (prop.IsObject()) {
                 for (auto& [key, val]: prop.GetObject()) {
-                    std::cout << key.GetString() << ": ";
                     meta_Data.emplace(key.GetString(), Value_Handler(val));
-                    std::cout << std::endl;
                 }
             }
         }
     } else if (document.IsObject()) {
         for (auto& [key, val] : document.GetObject()) {
-            std::cout << key.GetString() << ": ";
             meta_Data.emplace(key.GetString(), Value_Handler(val));
-            std::cout << std::endl;
         }
     }
     return meta_Data;
@@ -192,8 +173,8 @@ std::map<std::string ,variant_Value_Type> Process_Document (rj::Document& docume
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-std::map<std::string, variant_Value_Type> Json_Handler() {
-    std::map<std::string, variant_Value_Type> map {};
+std::map<std::string, Variant_Data> Json_Handler() {
+    std::map<std::string, Variant_Data> map {};
 
         rj::Document document;
         const char* json = "[\n{\"author\": \"Xavier\","
@@ -219,12 +200,69 @@ std::map<std::string, variant_Value_Type> Json_Handler() {
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+struct Recursive_Printer {
+    using result_type = void;
+    std::ostream& _os;
+
+    // forwards for `operator()`
+    template <typename Ta> void call(Ta const& value) const {
+        return operator()(value);
+    }
+    // dispatch for variants
+    template <typename Tb> void operator()(boost::variant<Tb> const& value) const {
+        return boost::apply_visitor(*this, value);
+    }
+
+    void operator()(int64_t i64) const { _os << i64; }
+    void operator()(u_int64_t u64) const { _os << u64; }
+    void operator()(double iD) const { _os << iD; }
+    void operator()(std::string const& string) const { _os << std::quoted(string); }
+    void operator()(bool _bool) const { _os << std::boolalpha << _bool; }
+
+    template <typename Tb> void operator()(std::vector<Tb> const& array) const {
+        _os << "[ ";
+        bool first = true;
+        for (auto &entry: array) {
+            if (first) {
+                first = false;
+            } else {
+                _os << ", ";
+                call(entry);
+            }
+            _os << " ]";
+        }
+    }
+
+    template <typename Tb> void operator()(std::map<std::string, Tb> const& map) const {
+        _os << "{ ";
+        bool first = true;
+        for (auto& [key, value]: map) {
+            if (first) {
+                first = false;
+            } else {
+                _os << ", ";
+                call(key);
+                _os << ": ";
+                call(value);
+            }
+            _os << " }";
+        }
+    }
+};
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+
 int main() {
         //Creates vector of metadata key: value maps.
         Get_String_Visitor print_Value;
-        std::vector<std::map<std::string, variant_Value_Type>> meta_Data {};
+        std::vector<std::map<std::string, Variant_Data>> meta_Data {};
         meta_Data.emplace_back(Json_Handler());
 
+        for (auto& map : meta_Data) {
+            for(auto& [key, value]: map) {
+
+            }
+        }
 
     /*
       Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
