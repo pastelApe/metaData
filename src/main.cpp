@@ -10,18 +10,12 @@
 #include <vector>
 
 //Boost
-#include "boost/algorithm/string.hpp"
 #include "boost/variant.hpp"
-
-//C++ Requests: Curl for People
-#include "cpr/cpr.h"
 
 //RapidJson
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
-#include "rapidjson/reader.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/prettywriter.h"
+
 
 
 
@@ -168,7 +162,7 @@ struct Recursive_Print_T {
     template <typename... Ts> void operator()(boost::variant<Ts...> const& v) const {
         return boost::apply_visitor(*this, v);
     }
-    void operator()(nullptr_t) const {_os << "Null"; }
+
     void operator()(bool b) const { _os << std::boolalpha << b; }
     void operator()(int64_t i64) const { _os << i64; }
     void operator()(u_int64_t u64) const { _os << u64; }
