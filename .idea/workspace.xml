@@ -23,10 +23,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="rename variables to readable names.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
-    </list>
+    <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="Variant type printer implemented and functional." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -149,15 +146,15 @@
       </method>
     </configuration>
     <list>
-      <item itemvalue="CMake Application.metaData" />
       <item itemvalue="CMake Application.cpr" />
-      <item itemvalue="CMake Application.uninstall" />
-      <item itemvalue="CMake Application.libcurl" />
       <item itemvalue="CMake Application.gmock" />
       <item itemvalue="CMake Application.gmock_main" />
       <item itemvalue="CMake Application.gtest" />
       <item itemvalue="CMake Application.gtest_main" />
+      <item itemvalue="CMake Application.libcurl" />
+      <item itemvalue="CMake Application.metaData" />
       <item itemvalue="CMake Application.mongoose" />
+      <item itemvalue="CMake Application.uninstall" />
       <item itemvalue="CMake Application.zlib" />
     </list>
   </component>
