@@ -1,4 +1,8 @@
 #pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
+#pragma clang diagnostic ignored "-Wunknown-pragmas"
+#pragma ide diagnostic ignored "UnusedParameter"
+#pragma ide diagnostic ignored "UnusedLocalVariable"
 #pragma ide diagnostic ignored "HidingNonVirtualFunction"
 #pragma ide diagnostic ignored "misc-no-recursion"
 #pragma ide diagnostic ignored "readability-convert-member-functions-to-static"
@@ -140,8 +144,8 @@ std::map<std::string, Variant_Type> Json_Handler() {
                            "\"pi\": 3.1416,"
                            "\"array\": [1, 2, 3, 4],"
                            "\"nested::array\": [\"This\", \"is\", \"level\", 1, \".\","
-                           "[\"This\", \"is\", \"level\", 2, \".\"],"
-                           "[\"This\", \"is\", \"level\", 3, \".\"]],"
+                           "[\"This\", \"is\", \"level\", 2, \".\","
+                           "[\"This\", \"is\", \"level\", 3, \".\"]]],"
                            "\"nested::object\":{\"level2\": {\"level3\": \"sub-value\"}},"
                            "\"array::object\":[{\"level2\": {\"level3\": [1,2,3,4]}}, [1,2,3,4]]}\n]";
         document.Parse(json);
@@ -152,15 +156,13 @@ std::map<std::string, Variant_Type> Json_Handler() {
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 struct Recursive_Print_T {
-    using result_type = void;
     std::ostream& _os;
-
     // forwards for `operator()`
-    template <typename T> void call(T const& v) const { return operator()(v); }
+    template <typename T> void call(T const& value) const { return operator()(value); }
 
     // dispatch for variants
-    template <typename... Ts> void operator()(boost::variant<Ts...> const& v) const {
-        return boost::apply_visitor(*this, v);
+    template <typename... Ts> void operator()(boost::variant<Ts...> const& value) const {
+        return boost::apply_visitor(*this, value);
     }
 
     void operator()(bool b) const { _os << std::boolalpha << b; }
@@ -170,17 +172,17 @@ struct Recursive_Print_T {
     void operator()(int i) const { _os << i; }
     void operator()(std::string const &s) const { _os << std::quoted(s); }
 
-    template <typename... Ts> void operator()(std::vector<Ts...> const& v) const {
+    template <typename... Ts> void operator()(std::vector<Ts...> const& array) const {
         _os << "[ ";
         bool first = true;
-        for (auto& el : v) {
+        for (auto& value : array) {
             if (first) {
                 first = false;
             }
-            else{
+            else {
                 _os << ", ";
             }
-            call(el);
+            call(value);
         }
         _os << " ]";
     }
@@ -237,3 +239,4 @@ int main() {
     return 0;
 }
 
+#pragma clang diagnostic pop

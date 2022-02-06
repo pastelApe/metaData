@@ -23,7 +23,8 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="Merged testing branch.">
+    <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="removed unused `#include`s">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -92,11 +93,6 @@
     </key>
   </component>
   <component name="RunManager" selected="CMake Application.metaData">
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="cpr" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metaData" TARGET_NAME="cpr" CONFIG_NAME="Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -219,6 +215,7 @@
       <workItem from="1644096583751" duration="6776000" />
       <workItem from="1644107137144" duration="1442000" />
       <workItem from="1644108587705" duration="1276000" />
+      <workItem from="1644161787043" duration="1479000" />
     </task>
     <task id="LOCAL-00001" summary="Working on string comparison. Saving progress.">
       <created>1642180676848</created>
@@ -297,7 +294,14 @@
       <option name="project" value="LOCAL" />
       <updated>1644110845706</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="removed unused `#include`s">
+      <created>1644111731937</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1644111731937</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -357,7 +361,8 @@
     <MESSAGE value="rename variables to readable names." />
     <MESSAGE value="Using rj::PrettyWriter for printing." />
     <MESSAGE value="Merged testing branch." />
-    <option name="LAST_COMMIT_MESSAGE" value="Merged testing branch." />
+    <MESSAGE value="removed unused `#include`s" />
+    <option name="LAST_COMMIT_MESSAGE" value="removed unused `#include`s" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
