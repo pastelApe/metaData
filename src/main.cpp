@@ -15,6 +15,7 @@
 
 //Boost
 #include "boost/variant.hpp"
+#include "boost/algorithm/string.hpp"
 
 //RapidJson
 #include "rapidjson/document.h"
@@ -37,7 +38,8 @@ typedef boost::make_recursive_variant<
         double,
         std::string,
         std::vector<boost::recursive_variant_>,
-        std::map<std::string, boost::recursive_variant_>>::type Variant_Type;
+        std::multimap<std::string, boost::recursive_variant_>>::type Variant_Type;
+
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
@@ -76,9 +78,9 @@ public:
 //Value_Handler is a recursive function. Checks all values including child objects and arrays.
 Variant_Type Value_Handler(rj::Value& value) {
     if (value.IsObject()) {
-        std::map<std::string, Variant_Type> map;
-        for (auto& [obj_key, obj_val] : value.GetObject()) {
-            map.emplace(obj_key.GetString(), Value_Handler(obj_val));
+        std::multimap<std::string, Variant_Type> map;
+        for (auto& [obj_Key, obj_Val] : value.GetObject()) {
+            map.emplace(obj_Key.GetString(), Value_Handler(obj_Val));
 
         }
         return map;
@@ -100,8 +102,8 @@ Variant_Type Value_Handler(rj::Value& value) {
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-std::map<std::string ,Variant_Type> Process_Document (rj::Document& document) {
-    std::map<std::string ,Variant_Type> meta_Data;
+std::multimap<std::string ,Variant_Type> Process_Document (rj::Document& document) {
+    std::multimap<std::string ,Variant_Type> meta_Data;
 
     if (document.HasParseError()) {
         fprintf(stderr, "Error (offset %u): %s",
@@ -128,11 +130,13 @@ std::map<std::string ,Variant_Type> Process_Document (rj::Document& document) {
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-std::map<std::string, Variant_Type> Json_Handler() {
-    std::map<std::string, Variant_Type> map {};
+std::multimap<std::string, Variant_Type> Process_Json() {
+    std::multimap<std::string, Variant_Type> map {};
 
         rj::Document document;
         const char* json = "[\n{\"author\": \"Xavier\","
+                           "\"author\": \"Xavier\","
+                           "\"auThor\": \"Xavier\","
                            "\"Author\": \"Casey\","
                            "\"creator\": \"Xavier\","
                            "\"Created-By\": [\"Xavier\", \"Casey\"],"
@@ -146,8 +150,9 @@ std::map<std::string, Variant_Type> Json_Handler() {
                            "\"nested::array\": [\"This\", \"is\", \"level\", 1, \".\","
                            "[\"This\", \"is\", \"level\", 2, \".\","
                            "[\"This\", \"is\", \"level\", 3, \".\"]]],"
-                           "\"nested::object\":{\"level2\": {\"level3\": \"sub-value\"}},"
-                           "\"array::object\":[{\"level2\": {\"level3\": [1,2,3,4]}}, [1,2,3,4]]}\n]";
+                           "\"nested::object\":{\"level2\": {\"level3\": \"Casey\"}},"
+                           "\"nested::object\":{\"level2\": {\"level3\": \"Casey\"}},"
+                           "\"array::object\":[{\"level2\": {\"level3\": \"Xavier\"}}, [1,2,3,4]]}\n]";
         document.Parse(json);
         map = Process_Document(document);
 
@@ -155,71 +160,108 @@ std::map<std::string, Variant_Type> Json_Handler() {
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
+
 struct Recursive_Print_T {
-    std::ostream& _os;
-    // forwards for `operator()`
-    template <typename T> void call(T const& value) const { return operator()(value); }
+    // forwards for type `operator()`s.
+    template <typename T1> void call(T1 const& value) const { return operator()(value); }
 
     // dispatch for variants
-    template <typename... Ts> void operator()(boost::variant<Ts...> const& value) const {
+    template <typename... T2> void operator()(boost::variant<T2...> const& value) const {
         return boost::apply_visitor(*this, value);
     }
 
-    void operator()(bool b) const { _os << std::boolalpha << b; }
-    void operator()(int64_t i64) const { _os << i64; }
-    void operator()(u_int64_t u64) const { _os << u64; }
-    void operator()(double d) const { _os << d; }
-    void operator()(int i) const { _os << i; }
-    void operator()(std::string const &s) const { _os << std::quoted(s); }
+    void operator()(bool b) const { std::cout << std::boolalpha << b; }
+    void operator()(int64_t i64) const { std::cout << i64; }
+    void operator()(u_int64_t u64) const { std::cout << u64; }
+    void operator()(double d) const { std::cout << d; }
+    void operator()(const std::string& s) const { std::cout << std::quoted(s); }
 
     template <typename... Ts> void operator()(std::vector<Ts...> const& array) const {
-        _os << "[ ";
+        std::cout << "[ ";
         bool first = true;
         for (auto& value : array) {
             if (first) {
                 first = false;
             }
             else {
-                _os << ", ";
+                std::cout << ", ";
             }
             call(value);
         }
-        _os << " ]";
+        std::cout << " ]";
     }
 
-    template <typename T> void operator()(std::map<std::string, T> const& map) const {
-        _os << "{ ";
+    template <typename T> void operator()(std::multimap<std::string, T> const& map) const {
+        std::cout << "{ ";
         bool first = true;
         for (auto& [key, value]: map) {
             if (first) {
                 first = false;
             } else {
-                _os << ", ";
+                std::cout << ", ";
             }
             call(key);
-            _os << ": ";
+            std::cout << ": ";
             call(value);
         }
-        _os << " }";
+        std::cout << " }";
     }
 };
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-int main() {
-        //Creates vector of metadata key: value maps.
-        std::vector<std::map<std::string, Variant_Type>> meta_Data {};
-        meta_Data.emplace_back(Json_Handler());
-        Recursive_Print_T print {std::cout};
 
-        for (auto& map : meta_Data) {
-            for(auto& [key, value]: map) {
-                std::cout << key << ": ";
-                print(value);
-                std::cout << std::endl;
+int main() {
+    //Creates vector of metadata key: value maps.
+    std::vector<std::multimap<std::string, Variant_Type>> meta_Data {};
+    meta_Data.emplace_back(Process_Json());
+
+    std::vector<std::multimap<std::string, Variant_Type>> unique_Data {};
+    for (auto& map : meta_Data) {
+        std::multimap<std::string, Variant_Type> last_Pair {};
+        for (auto& [key, value]: map) {
+            if (last_Pair.empty()) {
+                std::string low_key { boost::to_lower_copy(key)};
+                last_Pair.emplace(low_key, value);
+                continue;
+            }
+
+            std::multimap<std::string, Variant_Type> current_Pair {};
+            std::string low_key { boost::to_lower_copy(key)};
+            current_Pair.emplace(low_key, value);
+
+            if (last_Pair != current_Pair) {
+                unique_Data.emplace_back(current_Pair);
+                last_Pair = current_Pair;
+            }
+            else {
+                continue;
             }
         }
+    }
 
+    std::cout << "#######################################################################################" << std::endl;
+    std::cout << "\t\t\tmeta_Data";
+    Recursive_Print_T print;
+
+    for (auto& map : meta_Data) {
+        for(auto& [key, value]: map) {
+            std::cout << key << ": ";
+            print(value);
+            std::cout << std::endl;
+        }
+    }
+
+    std::cout << "#######################################################################################" << std::endl;
+    std::cout << "\t\t\tunique_Data";
+
+    for (auto& map : unique_Data) {
+        for(auto& [key, value]: map) {
+            std::cout << key << ": ";
+            print(value);
+            std::cout << std::endl;
+        }
+    }
     /*
       Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
       This set also includes the Dublin Core properties as well as properties found from custom fields that

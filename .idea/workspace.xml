@@ -23,7 +23,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="removed unused `#include`s">
+    <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="updated clang pragmas.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
@@ -93,6 +93,11 @@
     </key>
   </component>
   <component name="RunManager" selected="CMake Application.metaData">
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="cpr" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metaData" TARGET_NAME="cpr" CONFIG_NAME="Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -123,7 +128,7 @@
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="metaData" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="~/workspace/projects/Test-Data/001/" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metaData" TARGET_NAME="metaData" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metaData" RUN_TARGET_NAME="metaData">
+    <configuration name="metaData" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metaData" TARGET_NAME="metaData" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metaData" RUN_TARGET_NAME="metaData">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -216,6 +221,7 @@
       <workItem from="1644107137144" duration="1442000" />
       <workItem from="1644108587705" duration="1276000" />
       <workItem from="1644161787043" duration="1479000" />
+      <workItem from="1644330698082" duration="14634000" />
     </task>
     <task id="LOCAL-00001" summary="Working on string comparison. Saving progress.">
       <created>1642180676848</created>
