@@ -1,0 +1,1 @@
+java -Dlog4j.configuration=file:log4j.xml -jar tika-server-2.0.0-SNAPSHOT.jar -log debug
