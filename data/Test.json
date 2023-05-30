@@ -1,0 +1,58 @@
+[
+  {
+    "author": "name1",
+    "auTHOR": "name1",
+    "Author": "name2",
+    "creator": "name1",
+    "Created-By": [
+      "name1",
+      "name2"
+    ],
+    "hello": "world",
+    "true": true,
+    "false": false,
+    "null": null,
+    "int64": 123,
+    "uint64": 123456,
+    "pi": 3.1416,
+    "array": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "nested::array": [
+      "This",
+      "is",
+      "level",
+      1,
+      ".",
+      [
+        "This",
+        "is",
+        "level",
+        2,
+        "."
+      ]
+    ],
+    "nested-object": {
+      "object2": "sub-value"
+    },
+    "array::object": [
+      {
+        "level1": {
+          "level2": "name1"
+        }
+      },
+      [
+        1,
+        2,
+        3,
+        4
+      ],
+      true
+    ]
+  }
+]
+
+

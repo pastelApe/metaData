@@ -1,36 +1,41 @@
 #pragma clang diagnostic push
-#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
 #pragma clang diagnostic ignored "-Wunknown-pragmas"
+#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
 #pragma ide diagnostic ignored "UnusedParameter"
 #pragma ide diagnostic ignored "UnusedLocalVariable"
 #pragma ide diagnostic ignored "HidingNonVirtualFunction"
 #pragma ide diagnostic ignored "misc-no-recursion"
 #pragma ide diagnostic ignored "readability-convert-member-functions-to-static"
+
 //STL
 #include <filesystem>
-#include <iostream>
 #include <map>
-#include <set>
+#include <ranges>
 #include <vector>
+#include <iostream>
+#include <fstream>
 
 //Boost
 #include "boost/variant.hpp"
 #include "boost/algorithm/string.hpp"
 
+//FMT
+#include "fmt/core.h"
+#include "fmt/color.h"
+
 //RapidJson
-#include "rapidjson/document.h"
-#include "rapidjson/error/en.h"
-
-
-
-
-/*--------------------------------------------------------------------------------------------------------------------*/
+#include "rapidjson/include/rapidjson/document.h"
+#include "rapidjson/include/rapidjson/error/en.h"
+#include "rapidjson/include/rapidjson/filereadstream.h"
+#include "rapidjson/include/rapidjson/writer.h"
+#include "rapidjson/include/rapidjson/stringbuffer.h"
 
 namespace  fs = std::filesystem;
 namespace  rj = rapidjson;
 
-/*--------------------------------------------------------------------------------------------------------------------*/
-
+/**
+ * Multimap chosen to allow for duplicate key values.
+ */
 typedef boost::make_recursive_variant<
         bool,
         int64_t,
@@ -38,130 +43,118 @@ typedef boost::make_recursive_variant<
         double,
         std::string,
         std::vector<boost::recursive_variant_>,
-        std::multimap<std::string, boost::recursive_variant_>>::type Variant_Type;
+        std::multimap<std::string, boost::recursive_variant_>>::type VariantType;
 
-
-/*--------------------------------------------------------------------------------------------------------------------*/
-
+/**
+ * Reproduced from the Rapidjson "simplereader" tutorial.
+ */
 struct Type_Handler : public rj::BaseReaderHandler<rj::UTF8<>, Type_Handler> {
 private:
-    Variant_Type _props;
+    VariantType _type;
 public:
     // && is normally only used to declare a parameter of a function. And it only takes an r-value expression.
-    Variant_Type&& Get_Value() {
-        return std::move(_props);
+    VariantType&& Get_Value() {
+        return std::move(_type);
     }
 
     bool Null() { return true; }
-    bool Bool(bool b) { _props = b; return true; }
-    bool Int(int i) { _props = static_cast<int64_t> (i); return true; }
-    bool Uint(unsigned u) { _props = static_cast<uint64_t> (u);  return true; }
-    bool Int64(int64_t i64) { _props = static_cast<int64_t> (i64); return true; }
-    bool Uint64(uint64_t u64) { _props = static_cast<uint64_t> (u64) ; return true; }
-    bool Double(double d) { _props = d; return true; }
-    bool String(const char* str, rj::SizeType length, bool copy) {
-        _props = std::string(str, length);
-        return true;
-    }
+    bool Bool(bool b) { _type = b; return true; }
+    bool Int(int i) { _type = static_cast<int64_t> (i); return true; }
+    bool Uint(unsigned u) { _type = static_cast<uint64_t> (u);  return true; }
+    bool Int64(int64_t i64) { _type = static_cast<int64_t> (i64); return true; }
+    bool Uint64(uint64_t u64) { _type = static_cast<uint64_t> (u64) ; return true; }
+    bool Double(double d) { _type = d; return true; }
+    bool String(const char* str, rj::SizeType length, bool copy) { _type = std::string(str, length); return true; }
     bool StartObject() { return true; }
-    bool Key(const char* str, rj::SizeType length, bool copy) {
-        _props = std::string(str, length);
-        return true;
-    }
+    bool Key(const char* str, rj::SizeType length, bool copy) { _type = std::string(str, length); return true; }
     bool EndObject(rj::SizeType memberCount) { return true; }
     bool StartArray() { return true; }
     bool EndArray(rj::SizeType elementCount) { return true; }
 };
 
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-//Value_Handler is a recursive function. Checks all values including child objects and arrays.
-Variant_Type Value_Handler(rj::Value& value) {
+/**
+ * Recursive function to parse the value to include child objects and arrays.
+ * @param value of the parent object found in the Document.
+ * @return VariantType of the value.
+ */
+VariantType Value_Handler(rj::Value& value) {
     if (value.IsObject()) {
-        std::multimap<std::string, Variant_Type> map;
-        for (auto& [obj_Key, obj_Val] : value.GetObject()) {
-            map.emplace(obj_Key.GetString(), Value_Handler(obj_Val));
+        auto map { std::multimap<std::string, VariantType>() };
 
+        for (auto& [objKey, objValue] : value.GetObject()) {
+            map.emplace(objKey.GetString(), Value_Handler(objValue));
         }
         return map;
     }
-    else if (value.IsArray()) {
-        // To remove comma from printing after last value in array, subtract 1.
-        std::vector<Variant_Type> vec;
-        for (auto& arr_value: value.GetArray()) {
-            vec.push_back(Value_Handler(arr_value));
-        }
 
-        return vec;
+    else if (value.IsArray()) {
+        auto variantVector { std::vector<VariantType>() };
+
+        for (auto& arrayValue: value.GetArray()) {
+            variantVector.push_back(Value_Handler(arrayValue));
+        }
+        return variantVector;
     }
+
+    // objValue is not an object or array.
     else {
-        Type_Handler val_type;
-        value.Accept(val_type);
-        return val_type.Get_Value();
+        auto valueType { Type_Handler() };
+        value.Accept(valueType);
+        return valueType.Get_Value();
     }
 }
-/*--------------------------------------------------------------------------------------------------------------------*/
 
-std::multimap<std::string ,Variant_Type> Process_Document (rj::Document& document) {
-    std::multimap<std::string ,Variant_Type> meta_Data;
+/**
+ * Process document.
+ * @param document is an in-memory representation of JSON for query and manipulation.
+ * @return multimap with metadata in document.
+ */
+std::multimap<std::string ,VariantType> DocumentHandler (rj::Document& document) {
+    auto metaData {std::multimap<std::string ,VariantType>() };
 
     if (document.HasParseError()) {
-        fprintf(stderr, "Error (offset %u): %s",
-                (unsigned)document.GetErrorOffset(),
-                rj::GetParseError_En(document.GetParseError()));
-        std::cout << std::endl;
+        throw std::runtime_error(fmt::format("Error (offset {}): {}\n",
+                                             (unsigned)document.GetErrorOffset(),
+                                             rj::GetParseError_En(document.GetParseError())));
     }
 
     if (document.IsArray()) {
         for (auto& prop : document.GetArray()) {
             if (prop.IsObject()) {
                 for (auto& [key, value]: prop.GetObject()) {
-                    meta_Data.emplace(key.GetString(), Value_Handler(value));
+                    metaData.emplace(key.GetString(), Value_Handler(value));
                 }
             }
         }
     } else if (document.IsObject()) {
         for (auto& [key, value] : document.GetObject()) {
-            meta_Data.emplace(key.GetString(), Value_Handler(value));
+            metaData.emplace(key.GetString(), Value_Handler(value));
         }
     }
-    return meta_Data;
+    return metaData;
 }
 
-/*--------------------------------------------------------------------------------------------------------------------*/
+/**
+ * Parse file into json document and process the document into a map.
+ * @return JSON Document
+ */
+std::multimap<std::string, VariantType> ParseDocument(const std::filesystem::path& path) {
+    FILE* file = fopen(path.c_str(), "r");
 
-std::multimap<std::string, Variant_Type> Process_Json() {
-    std::multimap<std::string, Variant_Type> map {};
+    char readBuffer [65536] ;
+    auto stream { rj::FileReadStream(file, readBuffer, sizeof(readBuffer)) };
+    auto document { rj::Document() };
+    document.ParseStream(stream);
 
-        rj::Document document;
-        const char* json = "[\n{\"author\": \"Xavier\","
-                           "\"author\": \"Xavier\","
-                           "\"auThor\": \"Xavier\","
-                           "\"Author\": \"Casey\","
-                           "\"creator\": \"Xavier\","
-                           "\"Created-By\": [\"Xavier\", \"Casey\"],"
-                           "\"hello\": \"world\","
-                           "\"true\": true,"
-                           "\"false\": false,"
-                           "\"int64\": 123,"
-                           "\"uint64\": 123456,"
-                           "\"pi\": 3.1416,"
-                           "\"array\": [1, 2, 3, 4],"
-                           "\"nested::array\": [\"This\", \"is\", \"level\", 1, \".\","
-                           "[\"This\", \"is\", \"level\", 2, \".\","
-                           "[\"This\", \"is\", \"level\", 3, \".\"]]],"
-                           "\"nested::object\":{\"level2\": {\"level3\": \"Casey\"}},"
-                           "\"nested::object\":{\"level2\": {\"level3\": \"Casey\"}},"
-                           "\"array::object\":[{\"level2\": {\"level3\": \"Xavier\"}}, [1,2,3,4]]}\n]";
-        document.Parse(json);
-        map = Process_Document(document);
+    fclose(file);
+    return std::multimap<std::string, VariantType>(DocumentHandler(document));
 
-    return map;
 }
 
-/*--------------------------------------------------------------------------------------------------------------------*/
-
-struct Recursive_Print_T {
+/**
+ * Custom Value printer for pretty printing.
+ */
+struct PrintValue {
     // forwards for type `operator()`s.
     template <typename T1> void call(T1 const& value) const { return operator()(value); }
 
@@ -170,69 +163,115 @@ struct Recursive_Print_T {
         return boost::apply_visitor(*this, value);
     }
 
-    void operator()(bool b) const { std::cout << std::boolalpha << b; }
-    void operator()(int64_t i64) const { std::cout << i64; }
-    void operator()(u_int64_t u64) const { std::cout << u64; }
-    void operator()(double d) const { std::cout << d; }
-    void operator()(const std::string& s) const { std::cout << std::quoted(s); }
+    void operator()(bool b)               const { fmt::print("{}", b); }
+    void operator()(int64_t i64)          const { fmt::print("{}", i64); }
+    void operator()(u_int64_t u64)        const { fmt::print("{}", u64); }
+    void operator()(double d)             const { fmt::print("{}", d); }
+    void operator()(const std::string& s) const { fmt::print("{:?}", s); } // :? for quoted strings
 
     template <typename... Ts> void operator()(std::vector<Ts...> const& array) const {
-        std::cout << "[ ";
-        bool first = true;
+
         for (auto& value : array) {
-            if (first) {
-                first = false;
+            if(!array.empty()) {
+                if (value == array.front()) {
+                    fmt::print("[");
+                    call(value);
+                } else if (value != array.back()){
+                    call(value);
+                    fmt::print(", ");
+                } else {
+                    call(value);
+                    fmt::print("]");
+                }
             }
-            else {
-                std::cout << ", ";
-            }
-            call(value);
         }
-        std::cout << " ]";
     }
 
     template <typename T> void operator()(std::multimap<std::string, T> const& map) const {
-        std::cout << "{ ";
+        fmt::print("{}", "{");
         bool first = true;
         for (auto& [key, value]: map) {
             if (first) {
                 first = false;
             } else {
-                std::cout << ", ";
+                fmt::print(", ");
             }
             call(key);
-            std::cout << ": ";
+            fmt::print(": ");
             call(value);
         }
-        std::cout << " }";
+        fmt::print("{}", "}");
     }
 };
 
-/*--------------------------------------------------------------------------------------------------------------------*/
+
+/**
+  * Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
+  * This set also includes the Dublin Core properties as well as properties found from custom fields that
+  * match a core field.
+  * Removed "FORMAT", "TYPE". Included "AUTHOR".
+  * Any metadata keys that do not match will be disregarded.
+  */
+std::vector<std::string> CORE_KEYS {
+        "AUTHOR", "ALTITUDE", "COMMENTS", "CONTRIBUTOR", "COVERAGE", "CREATED", "CREATOR", "CREATOR_TOOL", "DATE",
+        "DC:", "DC.", "DC_", "DCTERMS:", "DCTM:", "DESCRIPTION", "EMBEDDED_RELATIONSHIP_ID", "EMBEDDED_RESOURCE_PATH",
+        "EMBEDDED_RESOURCE_TYPE", "HAS_SIGNATURE", "IDENTIFIER", "LANGUAGE", "LATITUDE", "LONGITUDE", "METADATA_DATE",
+        "MODIFIED", "MODIFIER", "ORIGINAL_RESOURCE_NAME", "PRINT_DATE", "PROTECTED", "PUBLISHER", "RATING", "RELATION",
+        "RESOURCE_NAME_KEY", "REVISION", "RIGHTS", "SOURCE", "SOURCE_PATH", "SUBJECT", "TITLE"
+};
 
 
-int main() {
-    //Creates vector of metadata key: value maps.
-    std::vector<std::multimap<std::string, Variant_Type>> meta_Data {};
-    meta_Data.emplace_back(Process_Json());
+void CorePrinter(std::vector<std::multimap<std::string, VariantType>>& coreData) {
+    std::sort(coreData.begin(), coreData.end());
 
-    std::vector<std::multimap<std::string, Variant_Type>> unique_Data {};
-    for (auto& map : meta_Data) {
-        std::multimap<std::string, Variant_Type> last_Pair {};
+    fmt::print(fmt::emphasis::bold | fmt::emphasis::underline,"\t\t\tUnique Core MetaData\t\t\t\n\n");
+    PrintValue print;
+
+    fmt::print("[ \n");
+    auto count = 1;
+    for (auto& core : coreData) {
+        auto size = coreData.size();
+        if (!core.empty()) {
+            for(auto& [key, value]: core) {
+                if (std::ranges::find(CORE_KEYS, key) != CORE_KEYS.end()) {
+                    fmt::print(" {:?}: ", key);
+                    print(value);
+
+                    if (count != size) {
+                        fmt::print(",");
+                    }
+                    count++;
+                    fmt::print("\n");
+                }
+            }
+        }
+    }
+    fmt::print("]");
+}
+
+int main(int argc, char *argv[]) {
+    //Store test data in map.
+    auto metaData {std::vector<std::multimap<std::string, VariantType>>() };
+    metaData.emplace_back(ParseDocument(std::filesystem::path(argv[1])));
+
+    auto uniqueCoreData {std::vector<std::multimap<std::string, VariantType>>() };
+
+    for (auto& map : metaData) {
+        auto lastPair {std::multimap<std::string, VariantType>() };
+
         for (auto& [key, value]: map) {
-            if (last_Pair.empty()) {
-                std::string low_key { boost::to_lower_copy(key)};
-                last_Pair.emplace(low_key, value);
+            if (lastPair.empty()) {
+                lastPair.emplace(boost::to_upper_copy(key), value);
                 continue;
             }
 
-            std::multimap<std::string, Variant_Type> current_Pair {};
-            std::string low_key { boost::to_lower_copy(key)};
-            current_Pair.emplace(low_key, value);
+            auto currentPair {std::multimap<std::string, VariantType>() };
+            currentPair.emplace(boost::to_upper_copy(key), value);
+            //Check for duplicates and test against CORE_KEYS. Save unique objects.
+            if (lastPair != currentPair) {
+                uniqueCoreData.emplace_back(currentPair);
 
-            if (last_Pair != current_Pair) {
-                unique_Data.emplace_back(current_Pair);
-                last_Pair = current_Pair;
+                lastPair = currentPair;
             }
             else {
                 continue;
@@ -240,44 +279,8 @@ int main() {
         }
     }
 
-    std::cout << "#######################################################################################" << std::endl;
-    std::cout << "\t\t\tmeta_Data";
-    Recursive_Print_T print;
+    CorePrinter(uniqueCoreData);
 
-    for (auto& map : meta_Data) {
-        for(auto& [key, value]: map) {
-            std::cout << key << ": ";
-            print(value);
-            std::cout << std::endl;
-        }
-    }
-
-    std::cout << "#######################################################################################" << std::endl;
-    std::cout << "\t\t\tunique_Data";
-
-    for (auto& map : unique_Data) {
-        for(auto& [key, value]: map) {
-            std::cout << key << ": ";
-            print(value);
-            std::cout << std::endl;
-        }
-    }
-    /*
-      Contains the core set of basic Tika metadata properties, which all parsers will attempt to supply.
-      This set also includes the Dublin Core properties as well as properties found from custom fields that
-      match a core field.
-
-      Removed "FORMAT", "TYPE".
-
-      Included "AUTHOR",
-     */
-    std::vector<std::string> core_keys {
-        "AUTHOR", "ALTITUDE", "COMMENTS", "CONTRIBUTOR", "COVERAGE", "CREATED", "CREATOR", "CREATOR_TOOL", "DATE",
-        "DC:", "DC.", "DC_", "DCTERMS:", "DCTM:", "DESCRIPTION", "EMBEDDED_RELATIONSHIP_ID", "EMBEDDED_RESOURCE_PATH",
-        "EMBEDDED_RESOURCE_TYPE", "HAS_SIGNATURE", "IDENTIFIER", "LANGUAGE", "LATITUDE", "LONGITUDE", "METADATA_DATE",
-        "MODIFIED", "MODIFIER", "ORIGINAL_RESOURCE_NAME", "PRINT_DATE", "PROTECTED", "PUBLISHER", "RATING", "RELATION",
-        "RESOURCE_NAME_KEY", "REVISION", "RIGHTS", "SOURCE", "SOURCE_PATH", "SUBJECT", "TITLE"
-    };
     return 0;
 }
 

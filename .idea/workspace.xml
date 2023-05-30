@@ -3,14 +3,20 @@
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
-  <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
+  <component name="CMakePresetLoader">{
+  &quot;useNewFormat&quot;: true
+}</component>
+  <component name="CMakeReloadState">
+    <option name="reloaded" value="true" />
+  </component>
+  <component name="CMakeRunConfigurationManager">
     <generated>
       <config projectName="metaData" targetName="gtest_main" />
       <config projectName="metaData" targetName="libcurl" />
       <config projectName="metaData" targetName="zlib" />
       <config projectName="metaData" targetName="cpr" />
-      <config projectName="metaData" targetName="gmock_main" />
       <config projectName="metaData" targetName="uninstall" />
+      <config projectName="metaData" targetName="gmock_main" />
       <config projectName="metaData" targetName="mongoose" />
       <config projectName="metaData" targetName="gtest" />
       <config projectName="metaData" targetName="metaData" />
@@ -24,8 +30,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4078289d-026c-43a0-aca4-0f79965f722c" name="Changes" comment="updated clang pragmas.">
+      <change afterPath="$PROJECT_DIR$/data/Test.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/master_keys.txt" beforeDir="false" afterPath="$PROJECT_DIR$/data/results/master_keys.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/unique_keys.txt" beforeDir="false" afterPath="$PROJECT_DIR$/data/results/unique_keys.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/custom.json" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/unique_keys.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/results/unique_keys.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,28 +79,31 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">
-    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
-    <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="RunOnceActivity.cidr.known.project.marker" value="true" />
-    <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="cf.advertisement.text.has.clang-format" value="true" />
-    <property name="cf.first.check.clang-format" value="false" />
-    <property name="cidr.known.project.marker" value="true" />
-    <property name="cmake.loaded.for.project" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../test" />
-    <property name="node.js.detected.package.eslint" value="true" />
-    <property name="node.js.detected.package.tslint" value="true" />
-    <property name="node.js.selected.package.eslint" value="(autodetect)" />
-    <property name="node.js.selected.package.tslint" value="(autodetect)" />
-    <property name="nodejs_package_manager_path" value="npm" />
-    <property name="settings.editor.selected.configurable" value="CMakeSettings" />
-    <property name="structure.view.defaults.are.configured" value="true" />
-  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "ToolWindowRun.ShowToolbar": "false",
+    "WebServerToolWindowFactoryState": "false",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/home/xavier/Development/metaData",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "settings.editor.selected.configurable": "editor.preferences.fonts.default",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/data/results" />
+      <recent name="$PROJECT_DIR$/data" />
+      <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/src" />
     </key>
   </component>
@@ -128,7 +143,7 @@
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="metaData" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metaData" TARGET_NAME="metaData" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metaData" RUN_TARGET_NAME="metaData">
+    <configuration name="metaData" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="$PROJECT_DIR$/data/Test.json" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="metaData" TARGET_NAME="metaData" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="metaData" RUN_TARGET_NAME="metaData">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -222,6 +237,8 @@
       <workItem from="1644108587705" duration="1276000" />
       <workItem from="1644161787043" duration="1479000" />
       <workItem from="1644330698082" duration="14634000" />
+      <workItem from="1685460031332" duration="4511000" />
+      <workItem from="1685467607445" duration="14775000" />
     </task>
     <task id="LOCAL-00001" summary="Working on string comparison. Saving progress.">
       <created>1642180676848</created>
@@ -313,7 +330,28 @@
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="VCPKGProject">
+    <isAutomaticEditVcpkgJson value="false" />
+    <isAutomaticCheckingOnLaunch value="false" />
+    <isAutomaticFoundErrors value="true" />
+    <isAutomaticFoundErrors value="true" />
+  </component>
   <component name="Vcs.Log.Tabs.Properties">
+    <option name="RECENT_FILTERS">
+      <map>
+        <entry key="Branch">
+          <value>
+            <list>
+              <RecentGroup>
+                <option name="FILTER_VALUES">
+                  <option value="json_testing" />
+                </option>
+              </RecentGroup>
+            </list>
+          </value>
+        </entry>
+      </map>
+    </option>
     <option name="TAB_STATES">
       <map>
         <entry key="MAIN">
@@ -335,26 +373,12 @@
         </entry>
       </map>
     </option>
-    <option name="RECENT_FILTERS">
-      <map>
-        <entry key="Branch">
-          <value>
-            <list>
-              <RecentGroup>
-                <option name="FILTER_VALUES">
-                  <option value="json_testing" />
-                </option>
-              </RecentGroup>
-            </list>
-          </value>
-        </entry>
-      </map>
-    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <ignored-roots>
       <path value="$PROJECT_DIR$/cmake-build-debug/_deps/cpr-src" />
       <path value="$PROJECT_DIR$/cmake-build-debug/_deps/zlib-src" />
+      <path value="$PROJECT_DIR$/extern/rapidjson" />
     </ignored-roots>
     <MESSAGE value="Working on string comparison. Saving progress." />
     <MESSAGE value="Variant property works. Printer function prints key. TODO: print value." />
